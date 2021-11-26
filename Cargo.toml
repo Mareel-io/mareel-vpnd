@@ -1,0 +1,15 @@
+[package]
+name = "mareel-vpnd "
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.13"
+ipnet = "2.3"
+
+[target.'cfg(windows)'.dependencies]
+wireguard-nt = "0.3"
+winapi = { version = "0.3", features = ["ws2def", "netioapi", "nldef", "winerror"] }
+
