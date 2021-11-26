@@ -8,6 +8,7 @@ edition = "2018"
 [dependencies]
 base64 = "0.13"
 ipnet = "2.3"
+rocket = "0.4.10"
 
 [target.'cfg(windows)'.dependencies]
 wireguard-nt = "0.3"
