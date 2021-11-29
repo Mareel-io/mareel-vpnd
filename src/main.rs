@@ -1,5 +1,10 @@
 #[macro_use] extern crate rocket;
 
-fn main() {
-    println!("Hello, world!");
+mod api;
+
+#[launch]
+fn rocket() -> _ {
+    rocket::build().attach(
+        api::stage()
+    )
 }
