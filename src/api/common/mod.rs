@@ -8,5 +8,9 @@ pub(crate) struct ApiResponse<T> {
     pub(crate) data: Option<T>,
 }
 
-#[derive(Debug)]
-pub(crate) struct ApiError;
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub(crate) struct ApiError {
+    pub(crate) code: i64,
+    pub(crate) msg: String,
+}

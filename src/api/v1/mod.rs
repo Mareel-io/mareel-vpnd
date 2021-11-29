@@ -12,6 +12,8 @@ pub(crate) fn stage() -> AdHoc {
             interface::get_iface,
             interface::update_iface,
             interface::delete_iface,
+            interface::get_status,
+            interface::put_status,
             peer::create_peer,
             peer::get_peers,
             peer::get_peer,
