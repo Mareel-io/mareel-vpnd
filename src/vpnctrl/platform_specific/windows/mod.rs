@@ -83,7 +83,7 @@ impl PlatformInterface for Interface {
 
         self.pubkey = self.iface.get_config().public_key;
 
-        return ret;
+        ret
     }
 
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>> {
