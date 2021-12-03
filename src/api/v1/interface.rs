@@ -7,7 +7,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::{InterfaceConfig, InterfaceStore};
+use super::{IfaceState, InterfaceConfig, InterfaceStore};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -70,11 +70,13 @@ pub(crate) async fn create_iface(
         .unwrap()
         .insert(ifcfg.name.clone(), Arc::new(Mutex::new(iface)));
 
-    iface_store
-        .iface_config_map
-        .lock()
-        .unwrap()
-        .insert(ifcfg.name.clone(), Arc::new(Mutex::new(ifcfg.into_inner())));
+    iface_store.iface_states.lock().unwrap().insert(
+        ifcfg.name.clone(),
+        Arc::new(Mutex::new(IfaceState {
+            iface_cfg: ifcfg.into_inner(),
+            peer_cfgs: vec![],
+        })),
+    );
 
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),
@@ -89,11 +91,11 @@ pub(crate) async fn get_ifaces(
 ) -> Option<Json<Vec<InterfaceConfig>>> {
     Some(Json(
         iface_store
-            .iface_config_map
+            .iface_states
             .lock()
             .unwrap()
             .values()
-            .map(|x| x.lock().unwrap().clone())
+            .map(|x| x.lock().unwrap().iface_cfg.clone())
             .collect(),
     ))
 }
@@ -103,8 +105,8 @@ pub(crate) async fn get_iface(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<InterfaceConfig>>) {
-    match iface_store.iface_config_map.lock().unwrap().get(&id) {
-        Some(x) => (Status::Ok, Some(Json(x.lock().unwrap().clone()))),
+    match iface_store.iface_states.lock().unwrap().get(&id) {
+        Some(x) => (Status::Ok, Some(Json(x.lock().unwrap().iface_cfg.clone()))),
         None => (Status::NotFound, None),
     }
 }
@@ -127,7 +129,7 @@ pub(crate) async fn delete_iface(
         Some(x) => {
             x.lock().unwrap().down();
             ifaces.remove(&id);
-            iface_store.iface_config_map.lock().unwrap().remove(&id);
+            iface_store.iface_states.lock().unwrap().remove(&id);
             (Status::Ok, Some(Json("ok".to_string())))
         }
         None => (Status::NotFound, None),

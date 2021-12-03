@@ -38,6 +38,11 @@ pub(crate) struct PeerConfig {
     pub(crate) keepalive: Option<i64>,
 }
 
+pub(crate) struct IfaceState {
+    pub iface_cfg: InterfaceConfig,
+    pub peer_cfgs: Vec<PeerConfig>,
+}
+
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 struct DaemonControlMessage {
@@ -45,7 +50,7 @@ struct DaemonControlMessage {
 }
 
 pub(crate) struct InterfaceStore {
-    iface_config_map: Mutex<HashMap<String, Arc<Mutex<InterfaceConfig>>>>,
+    iface_states: Mutex<HashMap<String, Arc<Mutex<IfaceState>>>>,
     ifaces: Mutex<HashMap<String, Arc<Mutex<Box<dyn PlatformInterface + Send>>>>>,
 }
 
@@ -107,7 +112,7 @@ pub(crate) fn stage() -> AdHoc {
             )
             .manage(InterfaceStore {
                 ifaces: Mutex::new(HashMap::new()),
-                iface_config_map: Mutex::new(HashMap::new()),
+                iface_states: Mutex::new(HashMap::new()),
             })
     })
 }
