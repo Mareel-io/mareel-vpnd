@@ -20,8 +20,9 @@ pub(crate) async fn create_iface(
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
 ) -> (Status, Result<Json<ApiResponse<String>>, Json<ApiError>>) {
-    let (name, private_key) = match (ifcfg.name.clone(), ifcfg.private_key.clone()) {
-        (Some(a), Some(b)) => (a, b),
+    println!("{:?}", ifcfg);
+    let private_key = match ifcfg.private_key.clone() {
+        Some(pk) => pk,
         _ => {
             return (
                 Status::BadRequest,
@@ -34,8 +35,24 @@ pub(crate) async fn create_iface(
     };
 
     // Create interface
-    let iface = match PlatformSpecificFactory::get_interface(&name) {
-        Ok(x) => Box::new(x),
+    let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
+        Ok(mut x) => {
+            match x.set_config(WgIfCfg {
+                listen_port: None,
+                privkey: private_key,
+            }) {
+                Ok(_) => Box::new(x),
+                Err(_e) => {
+                    return (
+                        Status::BadRequest,
+                        Err(Json(ApiError {
+                            code: -1,
+                            msg: "foo".to_string(),
+                        })),
+                    )
+                }
+            }
+        }
         Err(e) => {
             return (
                 Status::InternalServerError,
@@ -51,13 +68,13 @@ pub(crate) async fn create_iface(
         .ifaces
         .lock()
         .unwrap()
-        .insert(name.clone(), Arc::new(Mutex::new(iface)));
+        .insert(ifcfg.name.clone(), Arc::new(Mutex::new(iface)));
 
     iface_store
         .iface_config_map
         .lock()
         .unwrap()
-        .insert(name, Arc::new(Mutex::new(ifcfg.into_inner())));
+        .insert(ifcfg.name.clone(), Arc::new(Mutex::new(ifcfg.into_inner())));
 
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),

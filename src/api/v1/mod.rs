@@ -16,21 +16,25 @@ mod peer;
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub(crate) struct InterfaceConfig {
-    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
-    pub(crate) name: Option<String>,
+    pub(crate) name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) private_key: Option<String>,
+    #[serde(skip_deserializing)]
     pub(crate) public_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) listen_port: Option<u16>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub(crate) struct PeerConfig {
-    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
-    pub(crate) pubk: Option<String>,
+    pub(crate) pubk: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) psk: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) endpoint: Option<String>,
     pub(crate) allowed_ips: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) keepalive: Option<i64>,
 }
 
