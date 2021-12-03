@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiError, ApiResponse};
@@ -64,17 +65,12 @@ pub(crate) async fn create_iface(
         }
     };
 
-    iface_store
-        .ifaces
-        .lock()
-        .unwrap()
-        .insert(ifcfg.name.clone(), Arc::new(Mutex::new(iface)));
-
     iface_store.iface_states.lock().unwrap().insert(
         ifcfg.name.clone(),
         Arc::new(Mutex::new(IfaceState {
+            interface: iface,
             iface_cfg: ifcfg.into_inner(),
-            peer_cfgs: vec![],
+            peer_cfgs: HashMap::new(),
         })),
     );
 
@@ -124,12 +120,11 @@ pub(crate) async fn delete_iface(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<String>>) {
-    let mut ifaces = iface_store.ifaces.lock().unwrap();
+    let mut ifaces = iface_store.iface_states.lock().unwrap();
     match ifaces.get(&id) {
         Some(x) => {
-            x.lock().unwrap().down();
+            x.lock().unwrap().interface.down();
             ifaces.remove(&id);
-            iface_store.iface_states.lock().unwrap().remove(&id);
             (Status::Ok, Some(Json("ok".to_string())))
         }
         None => (Status::NotFound, None),
@@ -142,11 +137,11 @@ pub(crate) async fn get_status(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<InterfaceStatusResp>>) {
-    match iface_store.ifaces.lock().unwrap().get(&id) {
+    match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => (
             Status::Ok,
             Some(Json(InterfaceStatusResp {
-                status: x.lock().unwrap().get_status().to_string(),
+                status: x.lock().unwrap().interface.get_status().to_string(),
             })),
         ),
         None => (Status::NotFound, None),
@@ -165,9 +160,9 @@ pub(crate) async fn put_status(
         _ => return (Status::BadRequest, None),
     };
 
-    match iface_store.ifaces.lock().unwrap().get(&id) {
+    match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
-            let intf = x.lock().unwrap();
+            let intf = &x.lock().unwrap().interface;
             let cur_stat = intf.get_status();
 
             match (cur_stat, next_stat) {

@@ -35,12 +35,13 @@ pub(crate) struct PeerConfig {
     pub(crate) endpoint: Option<String>,
     pub(crate) allowed_ips: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) keepalive: Option<i64>,
+    pub(crate) keepalive: Option<u16>,
 }
 
 pub(crate) struct IfaceState {
+    pub interface: Box<dyn PlatformInterface + Send>,
     pub iface_cfg: InterfaceConfig,
-    pub peer_cfgs: Vec<PeerConfig>,
+    pub peer_cfgs: HashMap<String, PeerConfig>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -51,7 +52,6 @@ struct DaemonControlMessage {
 
 pub(crate) struct InterfaceStore {
     iface_states: Mutex<HashMap<String, Arc<Mutex<IfaceState>>>>,
-    ifaces: Mutex<HashMap<String, Arc<Mutex<Box<dyn PlatformInterface + Send>>>>>,
 }
 
 #[post("/shutdown", format = "json", data = "<magic>")]
@@ -63,13 +63,13 @@ async fn shutdown_daemon(
     match magic.magic {
         0xfee1dead => {
             // Shutdown
-            let mut ifaces = iface_store.ifaces.lock().unwrap();
+            let mut ifaces = iface_store.iface_states.lock().unwrap();
             let keys: Vec<String> = { ifaces.keys().cloned().collect() };
 
             for k in keys {
                 match ifaces.get(&k) {
                     Some(x) => {
-                        x.lock().unwrap().down();
+                        x.lock().unwrap().interface.down();
                         ifaces.remove(&k);
                     }
                     None => {}
@@ -111,7 +111,6 @@ pub(crate) fn stage() -> AdHoc {
                 ],
             )
             .manage(InterfaceStore {
-                ifaces: Mutex::new(HashMap::new()),
                 iface_states: Mutex::new(HashMap::new()),
             })
     })

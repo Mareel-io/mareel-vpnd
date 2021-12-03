@@ -1,6 +1,9 @@
 use rocket::{http::Status, serde::json::Json, State};
 
-use crate::api::{common::ApiResponse, v1::InterfaceStore};
+use crate::{
+    api::{common::ApiResponse, v1::InterfaceStore},
+    vpnctrl::platform_specific::common::WgPeerCfg,
+};
 
 use super::PeerConfig;
 
@@ -10,15 +13,35 @@ pub(crate) async fn create_peer(
     if_id: String,
     peercfg: Json<PeerConfig>,
 ) -> (Status, Option<Json<ApiResponse<String>>>) {
-    let ifaces = iface_store.ifaces.lock().unwrap();
-    let iface = match ifaces.get(&if_id) {
+    let iface_states = iface_store.iface_states.lock().unwrap();
+    let mut iface_state = match iface_states.get(&if_id) {
         Some(x) => x,
         None => return (Status::NotFound, None),
     }
     .lock()
     .unwrap();
 
-    let peers = iface.get_peers();
+    match iface_state.peer_cfgs.get(&peercfg.pubk) {
+        Some(_) => return (Status::Conflict, None),
+        None => {}
+    };
+
+    // Do some magic
+    match iface_state.interface.add_peer(WgPeerCfg {
+        pubkey: peercfg.pubk.clone(),
+        psk: None,
+        endpoint: peercfg.endpoint.clone(),
+        allowed_ips: peercfg.allowed_ips.clone(),
+        keep_alive: peercfg.keepalive,
+    }) {
+        Ok(_) => {},
+        Err(_) => return (Status::InternalServerError, None),
+    }
+
+    iface_state
+        .peer_cfgs
+        .insert(peercfg.pubk.clone(), peercfg.into_inner());
+
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),
         data: None,
@@ -30,8 +53,18 @@ pub(crate) async fn create_peer(
 pub(crate) async fn get_peers(
     iface_store: &State<InterfaceStore>,
     if_id: String,
-) -> Option<Json<Vec<PeerConfig>>> {
-    Some(Json(vec![]))
+) -> (Status, Option<Json<Vec<PeerConfig>>>) {
+    let iface_states = iface_store.iface_states.lock().unwrap();
+    let iface_state = match iface_states.get(&if_id) {
+        Some(x) => x,
+        None => return (Status::NotFound, None),
+    }
+    .lock()
+    .unwrap();
+
+    let peers: Vec<PeerConfig> = iface_state.peer_cfgs.values().map(|x| x.clone()).collect();
+
+    (Status::Ok, Some(Json(peers)))
 }
 
 #[get("/interface/<if_id>/peer/<pubk>")]

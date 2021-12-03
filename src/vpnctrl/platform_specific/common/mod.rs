@@ -28,6 +28,10 @@ pub struct WgIfCfg {
 
 pub struct WgPeerCfg {
     pub pubkey: String,
+    pub psk: Option<String>,
+    pub endpoint: Option<String>,
+    pub allowed_ips: Vec<String>,
+    pub keep_alive: Option<u16>,
 }
 
 #[derive(Clone)]

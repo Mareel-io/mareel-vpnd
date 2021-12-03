@@ -213,6 +213,18 @@ impl Interface {
     fn convert_to_wgpeercfg(peer: &SetPeer) -> WgPeerCfg {
         WgPeerCfg {
             pubkey: base64::encode(peer.public_key.unwrap()),
+            psk: match peer.preshared_key {
+                Some(x) => Some(base64::encode(x)),
+                None => None,
+            },
+            endpoint: Some(peer.endpoint.to_string()),
+            allowed_ips: peer
+                .allowed_ips
+                .clone()
+                .into_iter()
+                .map(|x| x.to_string())
+                .collect(),
+            keep_alive: peer.keep_alive,
         }
     }
 }
