@@ -101,8 +101,20 @@ pub(crate) async fn update_iface(
 }
 
 #[delete("/interface/<id>")]
-pub(crate) async fn delete_iface(id: String) -> (Status, Option<String>) {
-    (Status::NotImplemented, None)
+pub(crate) async fn delete_iface(
+    iface_store: &State<InterfaceStore>,
+    id: String,
+) -> (Status, Option<Json<String>>) {
+    let mut ifaces = iface_store.ifaces.lock().unwrap();
+    match ifaces.get(&id) {
+        Some(x) => {
+            x.lock().unwrap().down();
+            ifaces.remove(&id);
+            iface_store.iface_config_map.lock().unwrap().remove(&id);
+            (Status::Ok, Some(Json("ok".to_string())))
+        }
+        None => (Status::NotFound, None),
+    }
 }
 
 // Interface startup/shutdown
