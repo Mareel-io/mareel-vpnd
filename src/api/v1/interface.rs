@@ -21,7 +21,6 @@ pub(crate) async fn create_iface(
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
 ) -> (Status, Result<Json<ApiResponse<String>>, Json<ApiError>>) {
-    println!("{:?}", ifcfg);
     let private_key = match ifcfg.private_key.clone() {
         Some(pk) => pk,
         _ => {
