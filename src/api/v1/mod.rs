@@ -67,13 +67,10 @@ async fn shutdown_daemon(
             let keys: Vec<String> = { ifaces.keys().cloned().collect() };
 
             for k in keys {
-                match ifaces.get(&k) {
-                    Some(x) => {
-                        x.lock().unwrap().interface.down();
-                        ifaces.remove(&k);
-                    }
-                    None => {}
-                };
+                if let Some(x) = ifaces.get(&k) {
+                    x.lock().unwrap().interface.down();
+                    ifaces.remove(&k);
+                }
             }
 
             shutdown.notify();

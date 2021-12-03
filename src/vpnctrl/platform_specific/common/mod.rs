@@ -36,15 +36,15 @@ pub struct WgPeerCfg {
 
 #[derive(Clone)]
 pub enum InterfaceStatus {
-    STOPPED,
-    RUNNING,
+    Stopped,
+    Running,
 }
 
 impl ToString for InterfaceStatus {
     fn to_string(&self) -> String {
         match self {
-            InterfaceStatus::STOPPED => "stopped".to_string(),
-            InterfaceStatus::RUNNING => "running".to_string(),
+            InterfaceStatus::Stopped => "stopped".to_string(),
+            InterfaceStatus::Running => "running".to_string(),
         }
     }
 }

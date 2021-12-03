@@ -21,9 +21,8 @@ pub(crate) async fn create_peer(
     .lock()
     .unwrap();
 
-    match iface_state.peer_cfgs.get(&peercfg.pubk) {
-        Some(_) => return (Status::Conflict, None),
-        None => {}
+    if iface_state.peer_cfgs.get(&peercfg.pubk).is_some() {
+        return (Status::Conflict, None);
     };
 
     // Do some magic
@@ -62,7 +61,7 @@ pub(crate) async fn get_peers(
     .lock()
     .unwrap();
 
-    let peers: Vec<PeerConfig> = iface_state.peer_cfgs.values().map(|x| x.clone()).collect();
+    let peers: Vec<PeerConfig> = iface_state.peer_cfgs.values().cloned().collect();
 
     (Status::Ok, Some(Json(peers)))
 }

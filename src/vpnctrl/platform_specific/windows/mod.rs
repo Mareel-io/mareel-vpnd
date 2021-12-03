@@ -53,7 +53,7 @@ impl PlatformInterface for Interface {
                 peers: vec![],
             },
             peers: HashMap::new(),
-            status: InterfaceStatus::STOPPED,
+            status: InterfaceStatus::Stopped,
         })
     }
 
@@ -145,7 +145,7 @@ impl PlatformInterface for Interface {
                         public_key: Some(pubk),
                         preshared_key: psk,
                         keep_alive: peer.keep_alive,
-                        endpoint: endpoint,
+                        endpoint,
                         allowed_ips: vec![],
                     },
                 );
@@ -159,11 +159,8 @@ impl PlatformInterface for Interface {
         Ok(self
             .peers
             .values()
-            .filter(|x| match x.public_key {
-                Some(_) => true,
-                None => false,
-            })
-            .map(|x| Self::convert_to_wgpeercfg(x))
+            .filter(|x| x.public_key.is_some())
+            .map(Self::convert_to_wgpeercfg)
             .collect())
     }
 
@@ -241,10 +238,7 @@ impl Interface {
     fn convert_to_wgpeercfg(peer: &SetPeer) -> WgPeerCfg {
         WgPeerCfg {
             pubkey: base64::encode(peer.public_key.unwrap()),
-            psk: match peer.preshared_key {
-                Some(x) => Some(base64::encode(x)),
-                None => None,
-            },
+            psk: peer.preshared_key.map(base64::encode),
             endpoint: Some(peer.endpoint.to_string()),
             allowed_ips: peer
                 .allowed_ips

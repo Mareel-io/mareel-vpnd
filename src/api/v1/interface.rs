@@ -155,8 +155,8 @@ pub(crate) async fn put_status(
     status: Json<InterfaceStatusResp>,
 ) -> (Status, Option<Json<InterfaceStatusResp>>) {
     let next_stat = match status.status.as_str() {
-        "start" => InterfaceStatus::RUNNING,
-        "stop" => InterfaceStatus::STOPPED,
+        "start" => InterfaceStatus::Running,
+        "stop" => InterfaceStatus::Stopped,
         _ => return (Status::BadRequest, None),
     };
 
@@ -166,10 +166,10 @@ pub(crate) async fn put_status(
             let cur_stat = intf.get_status();
 
             match (cur_stat, next_stat) {
-                (InterfaceStatus::STOPPED, InterfaceStatus::RUNNING) => {
+                (InterfaceStatus::Stopped, InterfaceStatus::Running) => {
                     intf.up();
                 }
-                (InterfaceStatus::RUNNING, InterfaceStatus::STOPPED) => {
+                (InterfaceStatus::Running, InterfaceStatus::Stopped) => {
                     intf.down();
                 }
                 (_, _) => {}

@@ -13,9 +13,11 @@ mod vpnctrl;
 
 #[launch]
 fn rocket() -> _ {
-    let mut cfg = Config::default();
-    cfg.address = IpAddr::from_str("0.0.0.0").unwrap();
-    cfg.port = 8080;
+    let cfg = Config {
+        address: IpAddr::from_str("0.0.0.0").unwrap(),
+        port: 8080,
+        ..Default::default()
+    };
 
     rocket::custom(cfg).attach(api::stage())
 }
