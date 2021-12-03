@@ -7,7 +7,7 @@ use wireguard_nt::{Adapter, SetInterface, SetPeer};
 
 use crate::vpnctrl::error::{BadParameterError, DuplicatedEntryError, VpnctrlError};
 
-use super::common::{PlatformError, PlatformInterface, WgPeerCfg};
+use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgPeerCfg};
 
 #[cfg(target_arch = "x86_64")]
 const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/amd64/wireguard.dll";
@@ -27,6 +27,7 @@ pub struct Interface {
     iface: Adapter,
     iface_cfg: SetInterface,
     peers: HashMap<[u8; 32], SetPeer>,
+    status: InterfaceStatus,
 }
 
 impl PlatformInterface for Interface {
@@ -50,6 +51,7 @@ impl PlatformInterface for Interface {
                 peers: vec![],
             },
             peers: HashMap::new(),
+            status: InterfaceStatus::STOPPED,
         })
     }
 
@@ -140,6 +142,10 @@ impl PlatformInterface for Interface {
             Some(_) => self.apply_peer_update(),
             None => Ok(()),
         }
+    }
+
+    fn get_status(&self) -> InterfaceStatus {
+        self.status.clone()
     }
 
     fn up(&self) -> bool {

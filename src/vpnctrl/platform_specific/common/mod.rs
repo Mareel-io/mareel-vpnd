@@ -30,6 +30,21 @@ pub struct WgPeerCfg {
     pub pubkey: String,
 }
 
+#[derive(Clone)]
+pub enum InterfaceStatus {
+    STOPPED,
+    RUNNING,
+}
+
+impl ToString for InterfaceStatus {
+    fn to_string(&self) -> String {
+        match self {
+            InterfaceStatus::STOPPED => "stopped".to_string(),
+            InterfaceStatus::RUNNING => "running".to_string(),
+        }
+    }
+}
+
 pub trait PlatformInterface {
     fn new(name: &str) -> Result<Self, PlatformError>
     where
@@ -37,6 +52,7 @@ pub trait PlatformInterface {
     fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn get_status(&self) -> InterfaceStatus;
     fn up(&self) -> bool;
     fn down(&self) -> bool;
 }

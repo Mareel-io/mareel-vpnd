@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiError, ApiResponse};
-use crate::vpnctrl::platform_specific::common::{PlatformInterface, WgIfCfg};
+use crate::vpnctrl::platform_specific::common::{InterfaceStatus, PlatformInterface, WgIfCfg};
 use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
 use rocket::State;
@@ -11,7 +11,7 @@ use super::{InterfaceConfig, InterfaceStore};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
-pub(crate) struct InterfaceStatus {
+pub(crate) struct InterfaceStatusResp {
     pub(crate) status: String,
 }
 
@@ -40,7 +40,7 @@ pub(crate) async fn create_iface(
             return (
                 Status::InternalServerError,
                 Err(Json(ApiError {
-                    code: 0,
+                    code: -1,
                     msg: e.to_string(),
                 })),
             )
@@ -107,14 +107,54 @@ pub(crate) async fn delete_iface(id: String) -> (Status, Option<String>) {
 
 // Interface startup/shutdown
 #[get("/interface/<id>/status")]
-pub(crate) async fn get_status(id: String) -> (Status, Option<Json<InterfaceStatus>>) {
-    (Status::NotImplemented, None)
+pub(crate) async fn get_status(
+    iface_store: &State<InterfaceStore>,
+    id: String,
+) -> (Status, Option<Json<InterfaceStatusResp>>) {
+    match iface_store.ifaces.lock().unwrap().get(&id) {
+        Some(x) => (
+            Status::Ok,
+            Some(Json(InterfaceStatusResp {
+                status: x.lock().unwrap().get_status().to_string(),
+            })),
+        ),
+        None => (Status::NotFound, None),
+    }
 }
 
 #[put("/interface/<id>/status", format = "json", data = "<status>")]
 pub(crate) async fn put_status(
+    iface_store: &State<InterfaceStore>,
     id: String,
-    status: Json<InterfaceStatus>,
-) -> (Status, Json<InterfaceStatus>) {
-    (Status::NotImplemented, status)
+    status: Json<InterfaceStatusResp>,
+) -> (Status, Option<Json<InterfaceStatusResp>>) {
+    let next_stat = match status.status.as_str() {
+        "start" => InterfaceStatus::RUNNING,
+        "stop" => InterfaceStatus::STOPPED,
+        _ => return (Status::BadRequest, None),
+    };
+
+    match iface_store.ifaces.lock().unwrap().get(&id) {
+        Some(x) => {
+            let intf = x.lock().unwrap();
+            let cur_stat = intf.get_status();
+
+            match (cur_stat, next_stat) {
+                (InterfaceStatus::STOPPED, InterfaceStatus::RUNNING) => {
+                    intf.up();
+                }
+                (InterfaceStatus::RUNNING, InterfaceStatus::STOPPED) => {
+                    intf.down();
+                }
+                (_, _) => {}
+            };
+            (
+                Status::Ok,
+                Some(Json(InterfaceStatusResp {
+                    status: intf.get_status().to_string(),
+                })),
+            )
+        }
+        None => (Status::NotFound, None),
+    }
 }
