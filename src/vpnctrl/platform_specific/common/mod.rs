@@ -17,9 +17,7 @@ impl VpnctrlError for PlatformError {}
 
 impl PlatformError {
     pub fn new(msg: String) -> PlatformError {
-        PlatformError {
-            msg,
-        }
+        PlatformError { msg }
     }
 }
 
@@ -33,7 +31,9 @@ pub struct WgPeerCfg {
 }
 
 pub trait PlatformInterface {
-    fn new(name: &str) -> Result<Self, PlatformError> where Self: Sized;
+    fn new(name: &str) -> Result<Self, PlatformError>
+    where
+        Self: Sized;
     fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>>;

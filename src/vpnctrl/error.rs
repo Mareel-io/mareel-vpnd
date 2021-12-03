@@ -17,9 +17,7 @@ impl VpnctrlError for BadParameterError {}
 
 impl BadParameterError {
     pub fn new(msg: String) -> Self {
-        Self {
-            msg,
-        }
+        Self { msg }
     }
 }
 
@@ -38,8 +36,6 @@ impl VpnctrlError for DuplicatedEntryError {}
 
 impl DuplicatedEntryError {
     pub fn new(msg: String) -> Self {
-        Self {
-            msg,
-        }
+        Self { msg }
     }
 }

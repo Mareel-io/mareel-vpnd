@@ -1,9 +1,9 @@
-mod platform_specific;
 mod error;
+pub(crate) mod platform_specific;
 
 pub struct WgInterface {
     ifname: String,
-    privkey: String, 
+    privkey: String,
 }
 
 impl WgInterface {

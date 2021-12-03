@@ -1,21 +1,14 @@
-use rocket::serde;
 use rocket::serde::json::Json;
 
 use crate::api::common::ApiResponse;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-#[serde(crate = "rocket::serde")]
-pub(crate) struct PeerConfig {
-    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
-    pub(crate) pubk: Option<String>,
-    pub(crate) psk: Option<String>,
-    pub(crate) endpoint: Option<String>,
-    pub(crate) allowed_ips: Vec<String>,
-    pub(crate) keepalive: Option<i64>,
-}
+use super::PeerConfig;
 
-#[post("/interface/<if_id>/peer", format="json", data="<peercfg>")]
-pub(crate) async fn create_peer(if_id: String, peercfg: Json<PeerConfig>) -> Option<Json<ApiResponse<String>>> {
+#[post("/interface/<if_id>/peer", format = "json", data = "<peercfg>")]
+pub(crate) async fn create_peer(
+    if_id: String,
+    peercfg: Json<PeerConfig>,
+) -> Option<Json<ApiResponse<String>>> {
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),
         data: None,
@@ -33,8 +26,12 @@ pub(crate) async fn get_peer(if_id: String, pubk: String) -> Option<Json<PeerCon
     None
 }
 
-#[put("/interface/<if_id>/peer/<pubk>", format="json", data="<peercfg>")]
-pub(crate) async fn update_peer(if_id: String, pubk: String, peercfg: Json<PeerConfig>) -> Option<Json<String>> {
+#[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
+pub(crate) async fn update_peer(
+    if_id: String,
+    pubk: String,
+    peercfg: Json<PeerConfig>,
+) -> Option<Json<String>> {
     None
 }
 

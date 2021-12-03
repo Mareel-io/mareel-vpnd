@@ -31,9 +31,8 @@ pub struct Interface {
 
 impl PlatformInterface for Interface {
     fn new(name: &str) -> Result<Interface, PlatformError> {
-        let wg = unsafe {
-            wireguard_nt::load_from_path(DRIVER_DLL_PATH)
-        }.expect("Failed to load Wireguard DLL");
+        let wg = unsafe { wireguard_nt::load_from_path(DRIVER_DLL_PATH) }
+            .expect("Failed to load Wireguard DLL");
         let iface = match Interface::create_adapter(wg, name) {
             Ok(iface) => iface,
             Err(e) => return Err(e),
@@ -55,12 +54,16 @@ impl PlatformInterface for Interface {
     }
 
     fn set_config(&mut self, cfg: super::common::WgIfCfg) -> Result<(), Box<dyn VpnctrlError>> {
-        self.privkey.copy_from_slice(&(match base64::decode(cfg.privkey) {
-            Ok(x) => x,
-            Err(_) => {
-                return Err(Box::new(BadParameterError::new("Invalid privkey format".to_string())))
-            },
-        }));
+        self.privkey.copy_from_slice(
+            &(match base64::decode(cfg.privkey) {
+                Ok(x) => x,
+                Err(_) => {
+                    return Err(Box::new(BadParameterError::new(
+                        "Invalid privkey format".to_string(),
+                    )))
+                }
+            }),
+        );
 
         self.iface_cfg = SetInterface {
             listen_port: cfg.listen_port,
@@ -70,10 +73,8 @@ impl PlatformInterface for Interface {
         };
 
         let ret = match self.iface.set_config(&(self.iface_cfg)) {
-            Ok(()) => {Ok(())},
-            Err(e) => {
-                return Err(Box::new(PlatformError::new(e.to_string())))
-            },
+            Ok(()) => Ok(()),
+            Err(e) => return Err(Box::new(PlatformError::new(e.to_string()))),
         };
 
         self.port = match cfg.listen_port {
@@ -90,8 +91,10 @@ impl PlatformInterface for Interface {
         let pubkey = match base64::decode(peer.pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new("Invalid privkey format".to_string())))
-            },
+                return Err(Box::new(BadParameterError::new(
+                    "Invalid privkey format".to_string(),
+                )))
+            }
         };
 
         let mut pubk: [u8; 32] = [0; 32];
@@ -99,16 +102,21 @@ impl PlatformInterface for Interface {
 
         match self.peers.get(pubkey.as_slice()) {
             Some(_) => {
-                return Err(Box::new(DuplicatedEntryError::new("Duplicated entry".to_string())));
+                return Err(Box::new(DuplicatedEntryError::new(
+                    "Duplicated entry".to_string(),
+                )));
             }
             None => {
-                self.peers.insert(pubk, SetPeer {
-                    public_key: Some(pubk),
-                    preshared_key: None,
-                    keep_alive: None,
-                    endpoint: SocketAddr::from_str("0.0.0.0").unwrap(),
-                    allowed_ips: vec![],
-                });
+                self.peers.insert(
+                    pubk,
+                    SetPeer {
+                        public_key: Some(pubk),
+                        preshared_key: None,
+                        keep_alive: None,
+                        endpoint: SocketAddr::from_str("0.0.0.0").unwrap(),
+                        allowed_ips: vec![],
+                    },
+                );
             }
         };
 
@@ -119,16 +127,18 @@ impl PlatformInterface for Interface {
         let pubkey = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new("Invalid privkey format".to_string())))
-            },
+                return Err(Box::new(BadParameterError::new(
+                    "Invalid privkey format".to_string(),
+                )))
+            }
         };
 
         let mut pubk: [u8; 32] = [0; 32];
         pubk.copy_from_slice(&pubkey);
 
         match self.peers.remove(&pubk) {
-            Some(_) => { self.apply_peer_update() },
-            None => { Ok(()) },
+            Some(_) => self.apply_peer_update(),
+            None => Ok(()),
         }
     }
 
@@ -137,7 +147,7 @@ impl PlatformInterface for Interface {
     }
 
     fn down(&self) -> bool {
-        self.iface.down() 
+        self.iface.down()
     }
 }
 
@@ -145,12 +155,10 @@ impl Interface {
     fn create_adapter(wg: Arc<wireguard_nt::dll>, name: &str) -> Result<Adapter, PlatformError> {
         match Adapter::open(wg, name) {
             Ok(iface) => Ok(iface),
-            Err((_, wireguard)) => {
-                match Adapter::create(wireguard, IF_POOL, name, None) {
-                    Ok(iface) => Ok(iface),
-                    Err((e, _)) => Err(PlatformError::new(e.to_string())),
-                }
-            }
+            Err((_, wireguard)) => match Adapter::create(wireguard, IF_POOL, name, None) {
+                Ok(iface) => Ok(iface),
+                Err((e, _)) => Err(PlatformError::new(e.to_string())),
+            },
         }
     }
 
@@ -159,10 +167,8 @@ impl Interface {
         self.iface_cfg.peers = self.peers.values().cloned().collect();
 
         match self.iface.set_config(&(self.iface_cfg)) {
-            Ok(()) => {Ok(())},
-            Err(e) => {
-                Err(Box::new(PlatformError::new(e.to_string())))
-            },
+            Ok(()) => Ok(()),
+            Err(e) => Err(Box::new(PlatformError::new(e.to_string()))),
         }
     }
 }
