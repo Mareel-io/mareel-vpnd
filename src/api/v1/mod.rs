@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{serde, Build, Rocket, State};
+use rocket::{serde, Build, Rocket, Shutdown, State};
 
 use crate::vpnctrl::platform_specific::common::PlatformInterface;
 
@@ -41,8 +41,7 @@ pub(crate) struct PeerConfig {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 struct DaemonControlMessage {
-    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
-    pub(crate) magic: Option<u32>,
+    pub(crate) magic: u32,
 }
 
 pub(crate) struct InterfaceStore {
@@ -51,26 +50,38 @@ pub(crate) struct InterfaceStore {
 }
 
 #[post("/shutdown", format = "json", data = "<magic>")]
-fn shutdown_daemon(
+async fn shutdown_daemon(
+    shutdown: Shutdown,
     iface_store: &State<InterfaceStore>,
     magic: Json<DaemonControlMessage>,
 ) -> (Status, Result<Json<String>, Json<ApiError>>) {
     match magic.magic {
-        Some(0xfee1dead) => {}
-        _ => {
-            return (
-                Status::BadRequest,
-                Err(Json(ApiError {
-                    code: -1,
-                    msg: "Bad magic number".to_string(),
-                })),
-            );
+        0xfee1dead => {
+            // Shutdown
+            let mut ifaces = iface_store.ifaces.lock().unwrap();
+            let keys: Vec<String> = { ifaces.keys().cloned().collect() };
+
+            for k in keys {
+                match ifaces.get(&k) {
+                    Some(x) => {
+                        x.lock().unwrap().down();
+                        ifaces.remove(&k);
+                    }
+                    None => {}
+                };
+            }
+
+            shutdown.notify();
+            (Status::Ok, Ok(Json("All is well".to_string())))
         }
+        _ => (
+            Status::BadRequest,
+            Err(Json(ApiError {
+                code: -1,
+                msg: "Bad magic number".to_string(),
+            })),
+        ),
     }
-
-    todo!("Implement shutdown logic");
-
-    (Status::Ok, Ok(Json("All is well".to_string())))
 }
 
 pub(crate) fn stage() -> AdHoc {
