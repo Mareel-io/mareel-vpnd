@@ -35,6 +35,22 @@ pub(crate) async fn create_iface(
         }
     };
 
+    if iface_store
+        .iface_states
+        .lock()
+        .unwrap()
+        .get(&ifcfg.name)
+        .is_some()
+    {
+        return (
+            Status::Conflict,
+            Err(Json(ApiError {
+                code: -1,
+                msg: "Cannot create interface with same name".to_string(),
+            })),
+        );
+    }
+
     // Create interface
     let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
         Ok(mut x) => {
