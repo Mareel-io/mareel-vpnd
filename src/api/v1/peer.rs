@@ -34,7 +34,7 @@ pub(crate) async fn create_peer(
         allowed_ips: peercfg.allowed_ips.clone(),
         keep_alive: peercfg.keepalive,
     }) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(_) => return (Status::InternalServerError, None),
     }
 

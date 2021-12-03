@@ -101,6 +101,34 @@ impl PlatformInterface for Interface {
             }
         };
 
+        let psk = match peer.psk {
+            Some(x) => match base64::decode(x) {
+                Ok(x) => {
+                    let mut psk: [u8; 32] = [0; 32];
+                    psk.copy_from_slice(&x);
+                    Some(psk)
+                }
+                Err(_) => {
+                    return Err(Box::new(BadParameterError::new(
+                        "Invalid psk format".to_string(),
+                    )))
+                }
+            },
+            None => None,
+        };
+
+        let endpoint = match peer.endpoint {
+            Some(x) => match SocketAddr::from_str(&x) {
+                Ok(x) => x,
+                Err(_) => {
+                    return Err(Box::new(BadParameterError::new(
+                        "Invalid endpoint address".to_string(),
+                    )))
+                }
+            },
+            None => SocketAddr::from_str("0.0.0.0:0").unwrap(),
+        };
+
         let mut pubk: [u8; 32] = [0; 32];
         pubk.copy_from_slice(&pubkey);
 
@@ -115,9 +143,9 @@ impl PlatformInterface for Interface {
                     pubk,
                     SetPeer {
                         public_key: Some(pubk),
-                        preshared_key: None,
-                        keep_alive: None,
-                        endpoint: SocketAddr::from_str("0.0.0.0").unwrap(),
+                        preshared_key: psk,
+                        keep_alive: peer.keep_alive,
+                        endpoint: endpoint,
                         allowed_ips: vec![],
                     },
                 );
