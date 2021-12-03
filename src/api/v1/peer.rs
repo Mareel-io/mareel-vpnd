@@ -1,4 +1,4 @@
-use rocket::{serde::json::Json, State};
+use rocket::{http::Status, serde::json::Json, State};
 
 use crate::api::{common::ApiResponse, v1::InterfaceStore};
 
@@ -9,14 +9,21 @@ pub(crate) async fn create_peer(
     iface_store: &State<InterfaceStore>,
     if_id: String,
     peercfg: Json<PeerConfig>,
-) -> Option<Json<ApiResponse<String>>> {
-    //
-    //
+) -> (Status, Option<Json<ApiResponse<String>>>) {
+    let ifaces = iface_store.ifaces.lock().unwrap();
+    let iface = match ifaces.get(&if_id) {
+        Some(x) => x,
+        None => return (Status::NotFound, None),
+    }
+    .lock()
+    .unwrap();
+
+    let peers = iface.get_peers();
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),
         data: None,
     };
-    Some(Json(ret))
+    (Status::Ok, Some(Json(ret)))
 }
 
 #[get("/interface/<if_id>/peer")]

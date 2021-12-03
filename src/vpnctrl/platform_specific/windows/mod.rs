@@ -5,7 +5,9 @@ use std::sync::Arc;
 
 use wireguard_nt::{Adapter, SetInterface, SetPeer};
 
-use crate::vpnctrl::error::{BadParameterError, DuplicatedEntryError, VpnctrlError};
+use crate::vpnctrl::error::{
+    BadParameterError, DuplicatedEntryError, EntryNotFoundError, VpnctrlError,
+};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgPeerCfg};
 
@@ -125,6 +127,36 @@ impl PlatformInterface for Interface {
         self.apply_peer_update()
     }
 
+    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, Box<dyn VpnctrlError>> {
+        Ok(self
+            .peers
+            .values()
+            .filter(|x| match x.public_key {
+                Some(_) => true,
+                None => false,
+            })
+            .map(|x| Self::convert_to_wgpeercfg(x))
+            .collect())
+    }
+
+    fn get_peer(&self, pubkey: String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
+        let pk = match base64::decode(pubkey) {
+            Ok(x) => x,
+            Err(_) => {
+                return Err(Box::new(BadParameterError::new(
+                    "Invalid privkey format".to_string(),
+                )))
+            }
+        };
+
+        match self.peers.get(pk.as_slice()) {
+            Some(x) => Ok(Self::convert_to_wgpeercfg(x)),
+            None => Err(Box::new(EntryNotFoundError::new(
+                "Entry not found!".to_string(),
+            ))),
+        }
+    }
+
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>> {
         let pubkey = match base64::decode(pubkey) {
             Ok(x) => x,
@@ -175,6 +207,12 @@ impl Interface {
         match self.iface.set_config(&(self.iface_cfg)) {
             Ok(()) => Ok(()),
             Err(e) => Err(Box::new(PlatformError::new(e.to_string()))),
+        }
+    }
+
+    fn convert_to_wgpeercfg(peer: &SetPeer) -> WgPeerCfg {
+        WgPeerCfg {
+            pubkey: base64::encode(peer.public_key.unwrap()),
         }
     }
 }

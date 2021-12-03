@@ -39,3 +39,22 @@ impl DuplicatedEntryError {
         Self { msg }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct EntryNotFoundError {
+    msg: String,
+}
+
+impl fmt::Display for EntryNotFoundError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "BadParameterError: {}", self.msg)
+    }
+}
+
+impl VpnctrlError for EntryNotFoundError {}
+
+impl EntryNotFoundError {
+    pub fn new(msg: String) -> Self {
+        Self { msg }
+    }
+}

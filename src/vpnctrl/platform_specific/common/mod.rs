@@ -51,6 +51,8 @@ pub trait PlatformInterface {
         Self: Sized;
     fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>>;
+    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, Box<dyn VpnctrlError>>;
+    fn get_peer(&self, pubkey: String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>>;
     fn get_status(&self) -> InterfaceStatus;
     fn up(&self) -> bool;
