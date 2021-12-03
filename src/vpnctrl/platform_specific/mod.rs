@@ -16,17 +16,17 @@ pub struct PlatformSpecificFactory;
 
 impl PlatformSpecificFactory {
     #[cfg(target_os = "windows")]
-    fn get_interface(name: &str) -> Result<windows::Interface, PlatformError> {
+    pub fn get_interface(name: &str) -> Result<windows::Interface, PlatformError> {
         windows::Interface::new(name)
     }
 
     #[cfg(target_os = "macos")]
-    fn get_interface(name: &str) -> Result<macos::Interface, PlatformError> {
+    pub fn get_interface(name: &str) -> Result<macos::Interface, PlatformError> {
         Err(PlatformError::new("Not supported yet :(".to_string()))
     }
 
     #[cfg(target_os = "linux")]
-    fn get_interface(name: &str) -> Result<linux::Interface, PlatformError> {
+    pub fn get_interface(name: &str) -> Result<linux::Interface, PlatformError> {
         Err(PlatformError::new("Not supported yet :(".to_string()))
     }
 }

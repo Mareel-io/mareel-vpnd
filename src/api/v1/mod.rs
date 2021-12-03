@@ -2,9 +2,13 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use rocket::fairing::AdHoc;
-use rocket::{serde, Build, Rocket};
+use rocket::http::Status;
+use rocket::serde::json::Json;
+use rocket::{serde, Build, Rocket, State};
 
 use crate::vpnctrl::platform_specific::common::PlatformInterface;
+
+use super::common::ApiError;
 
 mod interface;
 mod peer;
@@ -30,9 +34,39 @@ pub(crate) struct PeerConfig {
     pub(crate) keepalive: Option<i64>,
 }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+struct DaemonControlMessage {
+    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
+    pub(crate) magic: Option<u32>,
+}
+
 pub(crate) struct InterfaceStore {
     iface_config_map: Mutex<HashMap<String, Arc<Mutex<InterfaceConfig>>>>,
     ifaces: Mutex<HashMap<String, Arc<Mutex<Box<dyn PlatformInterface + Send>>>>>,
+}
+
+#[post("/shutdown", format = "json", data = "<magic>")]
+fn shutdown_daemon(
+    iface_store: &State<InterfaceStore>,
+    magic: Json<DaemonControlMessage>,
+) -> (Status, Result<Json<String>, Json<ApiError>>) {
+    match magic.magic {
+        Some(0xfee1dead) => {}
+        _ => {
+            return (
+                Status::BadRequest,
+                Err(Json(ApiError {
+                    code: -1,
+                    msg: "Bad magic number".to_string(),
+                })),
+            );
+        }
+    }
+
+    todo!("Implement shutdown logic");
+
+    (Status::Ok, Ok(Json("All is well".to_string())))
 }
 
 pub(crate) fn stage() -> AdHoc {
@@ -41,6 +75,7 @@ pub(crate) fn stage() -> AdHoc {
             .mount(
                 "/api/v1",
                 routes![
+                    shutdown_daemon,
                     interface::create_iface,
                     interface::get_ifaces,
                     interface::get_iface,
