@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
+use crate::vpnctrl::error::VpnctrlError;
+
 use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
