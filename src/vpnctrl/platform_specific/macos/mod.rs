@@ -197,11 +197,26 @@ impl PlatformInterface for Interface {
 
     fn up(&mut self) -> bool {
         self.status = InterfaceStatus::Running;
-        todo!()
+        true
     }
 
     fn down(&mut self) -> bool {
         self.status = InterfaceStatus::Stopped;
-        todo!()
+        true
+    }
+
+    fn delete(&mut self) -> () {
+        self.status = InterfaceStatus::Running;
+        let device = match Device::get(&self.ifname, self.backend) {
+            Ok(x) => x,
+            Err(_) => {
+                return ();
+            },
+        };
+
+        match device.delete() {
+            Ok(_) => (),
+            Err(_) => (),
+        };
     }
 }

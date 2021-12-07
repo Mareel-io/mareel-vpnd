@@ -138,7 +138,10 @@ pub(crate) async fn delete_iface(
     let mut ifaces = iface_store.iface_states.lock().unwrap();
     match ifaces.get(&id) {
         Some(x) => {
-            x.lock().unwrap().interface.down();
+            let mut iface = x.lock().unwrap();
+            iface.interface.down();
+            iface.interface.delete();
+            drop(iface);
             ifaces.remove(&id);
             (Status::Ok, Some(Json("ok".to_string())))
         }

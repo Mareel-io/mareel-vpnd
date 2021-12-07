@@ -214,6 +214,10 @@ impl PlatformInterface for Interface {
         self.status = InterfaceStatus::Stopped;
         self.iface.down()
     }
+
+    fn delete(&mut self) -> () {
+        // Do nothing
+    }
 }
 
 impl Interface {

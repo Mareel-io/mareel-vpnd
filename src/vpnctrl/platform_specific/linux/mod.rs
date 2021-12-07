@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
+use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder, Device};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
 use crate::vpnctrl::error::{
@@ -113,7 +113,6 @@ impl PlatformInterface for Interface {
             None => peercfg,
         };
 
-        //
         match DeviceUpdate::new()
             .add_peer(peercfg)
             .apply(&self.ifname, self.backend)
@@ -197,11 +196,26 @@ impl PlatformInterface for Interface {
 
     fn up(&mut self) -> bool {
         self.status = InterfaceStatus::Running;
-        todo!()
+        true
     }
 
     fn down(&mut self) -> bool {
         self.status = InterfaceStatus::Stopped;
-        todo!()
+        true
+    }
+
+    fn delete(&mut self) -> () {
+        self.status = InterfaceStatus::Running;
+        let device = match Device::get(&self.ifname, self.backend) {
+            Ok(x) => x,
+            Err(_) => {
+                return ();
+            },
+        };
+
+        match device.delete() {
+            Ok(_) => (),
+            Err(_) => (),
+        };
     }
 }
