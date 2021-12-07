@@ -205,11 +205,13 @@ impl PlatformInterface for Interface {
         self.status.clone()
     }
 
-    fn up(&self) -> bool {
+    fn up(&mut self) -> bool {
+        self.status = InterfaceStatus::Running;
         self.iface.up()
     }
 
-    fn down(&self) -> bool {
+    fn down(&mut self) -> bool {
+        self.status = InterfaceStatus::Stopped;
         self.iface.down()
     }
 }

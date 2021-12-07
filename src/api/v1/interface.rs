@@ -177,7 +177,7 @@ pub(crate) async fn put_status(
 
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
-            let intf = &x.lock().unwrap().interface;
+            let intf = &mut x.lock().unwrap().interface;
             let cur_stat = intf.get_status();
 
             match (cur_stat, next_stat) {

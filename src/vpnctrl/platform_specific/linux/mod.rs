@@ -1,13 +1,10 @@
 use std::collections::HashMap;
 
-use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
-use crate::vpnctrl::error::VpnctrlError;
-
 use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
 use crate::vpnctrl::error::{
-    BadParameterError, DuplicatedEntryError, EntryNotFoundError, VpnctrlError,
+    BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
 pub struct Interface {
@@ -32,7 +29,12 @@ impl PlatformInterface for Interface {
             }
         };
 
-        DeviceUpdate::new().apply(&ifname, Backend::Kernel);
+        match DeviceUpdate::new().apply(&ifname, Backend::Kernel) {
+            Ok(_) => (),
+            Err(_) => {
+                return Err(PlatformError::new("Failed to create interface".to_string()));
+            }
+        }
 
         Ok(Interface {
             ifname,
@@ -61,7 +63,14 @@ impl PlatformInterface for Interface {
             None => update,
         };
 
-        update.apply(&self.ifname, self.backend);
+        match update.apply(&self.ifname, self.backend) {
+            Ok(_) => (),
+            Err(_) => {
+                return Err(Box::new(InternalError::new(
+                    "Failed to update interface".to_string(),
+                )));
+            }
+        };
 
         Ok(())
     }
@@ -105,9 +114,17 @@ impl PlatformInterface for Interface {
         };
 
         //
-        DeviceUpdate::new()
+        match DeviceUpdate::new()
             .add_peer(peercfg)
-            .apply(&self.ifname, self.backend);
+            .apply(&self.ifname, self.backend)
+        {
+            Ok(_) => (),
+            Err(_) => {
+                return Err(Box::new(InternalError::new(
+                    "Failed to update interface".to_string(),
+                )));
+            }
+        }
 
         // Add the peer
         self.peers.insert(pubkey_raw, peer);
@@ -137,18 +154,54 @@ impl PlatformInterface for Interface {
     }
 
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>> {
-        todo!()
+        let pk = match Key::from_base64(&pubkey) {
+            Ok(x) => x,
+            Err(_) => {
+                return Err(Box::new(BadParameterError::new(
+                    "Invalid pubkey format".to_string(),
+                )))
+            }
+        };
+
+        // Lookup the peer
+        let mut pubkey_raw: [u8; 32] = [0; 32];
+        pubkey_raw.copy_from_slice(pk.as_bytes());
+        if self.peers.get(&pubkey_raw).is_none() {
+            // Not exist
+            return Err(Box::new(EntryNotFoundError::new(
+                "Entry not found".to_string(),
+            )));
+        }
+
+        // Remove peer
+        match DeviceUpdate::new()
+            .remove_peer_by_key(&pk)
+            .apply(&self.ifname, self.backend)
+        {
+            Ok(_) => (),
+            Err(_) => {
+                return Err(Box::new(InternalError::new(
+                    "Failed to update interface".to_string(),
+                )));
+            }
+        };
+
+        self.peers.remove(&pubkey_raw);
+
+        Ok(())
     }
 
     fn get_status(&self) -> InterfaceStatus {
+        self.status.clone()
+    }
+
+    fn up(&mut self) -> bool {
+        self.status = InterfaceStatus::Running;
         todo!()
     }
 
-    fn up(&self) -> bool {
-        todo!()
-    }
-
-    fn down(&self) -> bool {
+    fn down(&mut self) -> bool {
+        self.status = InterfaceStatus::Stopped;
         todo!()
     }
 }
