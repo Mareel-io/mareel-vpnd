@@ -21,11 +21,13 @@ impl PlatformError {
     }
 }
 
+#[derive(Clone)]
 pub struct WgIfCfg {
     pub listen_port: Option<u16>,
     pub privkey: String,
 }
 
+#[derive(Clone)]
 pub struct WgPeerCfg {
     pub pubkey: String,
     pub psk: Option<String>,
