@@ -22,11 +22,11 @@ impl PlatformSpecificFactory {
 
     #[cfg(target_os = "macos")]
     pub fn get_interface(name: &str) -> Result<macos::Interface, PlatformError> {
-        Err(PlatformError::new("Not supported yet :(".to_string()))
+        macos::Interface::new(name)
     }
 
     #[cfg(target_os = "linux")]
     pub fn get_interface(name: &str) -> Result<linux::Interface, PlatformError> {
-        Err(PlatformError::new("Not supported yet :(".to_string()))
+        linux::Interface::new(name)
     }
 }

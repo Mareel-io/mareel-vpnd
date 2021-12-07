@@ -21,11 +21,13 @@ impl PlatformError {
     }
 }
 
+#[derive(Clone)]
 pub struct WgIfCfg {
     pub listen_port: Option<u16>,
     pub privkey: String,
 }
 
+#[derive(Clone)]
 pub struct WgPeerCfg {
     pub pubkey: String,
     pub psk: Option<String>,
@@ -59,6 +61,7 @@ pub trait PlatformInterface {
     fn get_peer(&self, pubkey: String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
     fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>>;
     fn get_status(&self) -> InterfaceStatus;
-    fn up(&self) -> bool;
-    fn down(&self) -> bool;
+    fn up(&mut self) -> bool;
+    fn down(&mut self) -> bool;
+    fn delete(&mut self) -> ();
 }

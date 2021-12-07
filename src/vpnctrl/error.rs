@@ -58,3 +58,22 @@ impl EntryNotFoundError {
         Self { msg }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct InternalError {
+    msg: String,
+}
+
+impl fmt::Display for InternalError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "BadParameterError: {}", self.msg)
+    }
+}
+
+impl VpnctrlError for InternalError {}
+
+impl InternalError {
+    pub fn new(msg: String) -> Self {
+        Self { msg }
+    }
+}
