@@ -8,6 +8,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
+use super::tokenauth::ApiKey;
 use super::{IfaceState, InterfaceConfig, InterfaceStore};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -18,6 +19,7 @@ pub(crate) struct InterfaceStatusResp {
 
 #[post("/interface", format = "json", data = "<ifcfg>")]
 pub(crate) async fn create_iface(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
 ) -> (Status, Result<Json<ApiResponse<String>>, Json<ApiError>>) {
@@ -98,6 +100,7 @@ pub(crate) async fn create_iface(
 
 #[get("/interface")]
 pub(crate) async fn get_ifaces(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
 ) -> Option<Json<Vec<InterfaceConfig>>> {
     Some(Json(
@@ -113,6 +116,7 @@ pub(crate) async fn get_ifaces(
 
 #[get("/interface/<id>")]
 pub(crate) async fn get_iface(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<InterfaceConfig>>) {
@@ -124,6 +128,7 @@ pub(crate) async fn get_iface(
 
 #[put("/interface/<id>", format = "json", data = "<ifcfg>")]
 pub(crate) async fn update_iface(
+    _apikey: ApiKey,
     id: String,
     ifcfg: Json<InterfaceConfig>,
 ) -> (Status, Option<Json<String>>) {
@@ -132,6 +137,7 @@ pub(crate) async fn update_iface(
 
 #[delete("/interface/<id>")]
 pub(crate) async fn delete_iface(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<String>>) {
@@ -152,6 +158,7 @@ pub(crate) async fn delete_iface(
 // Interface startup/shutdown
 #[get("/interface/<id>/status")]
 pub(crate) async fn get_status(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> (Status, Option<Json<InterfaceStatusResp>>) {
@@ -168,6 +175,7 @@ pub(crate) async fn get_status(
 
 #[put("/interface/<id>/status", format = "json", data = "<status>")]
 pub(crate) async fn put_status(
+    _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
     status: Json<InterfaceStatusResp>,

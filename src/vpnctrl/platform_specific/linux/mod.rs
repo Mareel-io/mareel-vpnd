@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder, Device};
+use wireguard_control::{Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
 use crate::vpnctrl::error::{
@@ -210,7 +210,7 @@ impl PlatformInterface for Interface {
             Ok(x) => x,
             Err(_) => {
                 return ();
-            },
+            }
         };
 
         match device.delete() {

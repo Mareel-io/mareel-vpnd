@@ -211,7 +211,7 @@ impl PlatformInterface for Interface {
             Ok(x) => x,
             Err(_) => {
                 return ();
-            },
+            }
         };
 
         match device.delete() {
