@@ -204,18 +204,20 @@ impl PlatformInterface for Interface {
         true
     }
 
-    fn delete(&mut self) -> () {
+    fn delete(&mut self) {
         self.status = InterfaceStatus::Running;
         let device = match Device::get(&self.ifname, self.backend) {
             Ok(x) => x,
             Err(_) => {
-                return ();
+                return;
             }
         };
 
         match device.delete() {
             Ok(_) => (),
-            Err(_) => (),
+            Err(_) => {
+                println!("Warn: device delete error");
+            },
         };
     }
 }

@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{serde, Build, Rocket, Shutdown, State};
+use rocket::{serde, Shutdown, State};
 
 use crate::vpnctrl::platform_specific::common::PlatformInterface;
 
