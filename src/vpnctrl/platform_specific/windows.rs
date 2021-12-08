@@ -215,7 +215,7 @@ impl PlatformInterface for Interface {
         self.iface.down()
     }
 
-    fn delete(&mut self) -> () {
+    fn delete(&mut self) {
         // Do nothing
     }
 }
