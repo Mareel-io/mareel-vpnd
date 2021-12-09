@@ -219,7 +219,7 @@ impl Drop for Interface {
             Ok(_) => (),
             Err(_) => {
                 println!("Warn: device delete error");
-            },
+            }
         };
     }
 }
