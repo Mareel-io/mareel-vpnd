@@ -63,5 +63,4 @@ pub trait PlatformInterface {
     fn get_status(&self) -> InterfaceStatus;
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
-    fn delete(&mut self);
 }
