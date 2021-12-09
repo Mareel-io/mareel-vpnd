@@ -5,7 +5,7 @@ use crate::{
     vpnctrl::platform_specific::common::WgPeerCfg,
 };
 
-use super::{PeerConfig, tokenauth::ApiKey};
+use super::{tokenauth::ApiKey, PeerConfig};
 
 #[post("/interface/<if_id>/peer", format = "json", data = "<peercfg>")]
 pub(crate) async fn create_peer(
