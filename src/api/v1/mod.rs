@@ -12,7 +12,6 @@ use super::common::ApiError;
 
 mod interface;
 mod peer;
-mod tokenauth;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]

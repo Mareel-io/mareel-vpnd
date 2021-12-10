@@ -8,8 +8,8 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::tokenauth::ApiKey;
 use super::{IfaceState, InterfaceConfig, InterfaceStore};
+use crate::api::tokenauth::ApiKey;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]

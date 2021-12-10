@@ -1,6 +1,7 @@
 use rocket::fairing::AdHoc;
 
 pub(crate) mod common;
+pub(crate) mod tokenauth;
 mod v1;
 
 pub(crate) fn stage() -> AdHoc {

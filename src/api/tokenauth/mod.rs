@@ -3,9 +3,12 @@ use std::sync::Arc;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 
+#[cfg(feature = "keytar")]
 const KEYTAR_PACKAGE_NAME: &str = "io.mareel.vpn.vpnd";
+#[cfg(feature = "keytar")]
 const KEYTAR_ACC_NAME: &str = "apikey";
 
+#[cfg(feature = "keytar")]
 lazy_static! {
     static ref APITOKEN: Arc<Option<String>> = {
         // Load API key from keytar
@@ -20,6 +23,14 @@ lazy_static! {
             true => Some(keyresult.password),
             false => None,
         })
+    };
+}
+
+// Read from config file
+#[cfg(not(feature = "keytar"))]
+lazy_static! {
+    static ref APITOKEN: Arc<Option<String>> = {
+        Arc::new(Some("crowbar".to_string()))
     };
 }
 
