@@ -13,6 +13,8 @@ ipnet = "2.3"
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
 lazy_static = "1.4.0"
 clap = { version = "3.0.0-rc.0", features = ["derive"] }
+toml = "0.5.8"
+serde = "1.0.131"
 
 [target.'cfg(feature = "keytar")'.dependencies]
 keytar = "0.1.6"

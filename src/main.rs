@@ -3,11 +3,11 @@ use std::str::FromStr;
 
 use clap::Parser;
 
+use config::read_config;
 use rocket::config::Config;
 use rocket::fairing::AdHoc;
 use rocket::tokio::sync::mpsc::Receiver;
 
-#[cfg(not(target_os = "windows"))]
 use rocket::tokio::runtime::Runtime;
 
 #[macro_use]
@@ -16,21 +16,37 @@ extern crate rocket;
 extern crate lazy_static;
 
 mod api;
+mod config;
 mod vpnctrl;
 
 #[cfg(target_os = "windows")]
 mod winsvc;
 
+lazy_static! {
+    static ref ARGS: Args = Args::parse();
+}
+
 //#[launch]
-pub(crate) async fn launch(shdn: Option<Receiver<()>>) -> Result<(), rocket::Error> {
+pub(crate) async fn launch(shdn: Option<Receiver<()>>, daemon_cfg: &config::Config) -> Result<(), rocket::Error> {
+    let listen = match &daemon_cfg.api.listen {
+        Some(x) => x,
+        None => "127.0.0.1",
+    };
+
+    let port = match &daemon_cfg.api.port {
+        Some(x) => x.to_owned(),
+        None => 8080,
+    };
+
     let cfg = Config {
-        address: IpAddr::from_str("0.0.0.0").unwrap(),
-        port: 8080,
+        address: IpAddr::from_str(&listen).unwrap(),
+        port,
         ..Default::default()
     };
 
     rocket::custom(cfg)
-        .attach(api::stage())
+        // TODO: FIXME
+        .attach(api::stage(&daemon_cfg.api.apikey))
         .attach(AdHoc::on_liftoff("Shutdown", move |rocket| {
             Box::pin(async move {
                 let shutdown = rocket.shutdown();
@@ -48,6 +64,24 @@ pub(crate) async fn launch(shdn: Option<Receiver<()>>) -> Result<(), rocket::Err
         .await
 }
 
+fn launcher(shdn: Option<Receiver<()>>) -> Result<(), ()> {
+    // Read config file
+    let cfgpath = match &ARGS.config {
+        Some(x) => x,
+        None => "./mareel-vpnd.toml",
+    };
+
+    let cfg = read_config(cfgpath, ARGS.config.is_some());
+
+    match Runtime::new()
+        .unwrap()
+        .block_on(launch(shdn, &cfg))
+    {
+        Ok(_) => Ok(()),
+        Err(_) => Err(()), // TODO: Do it properly
+    }
+}
+
 #[derive(clap::Parser)]
 #[clap(about, version, author)]
 struct Args {
@@ -63,16 +97,16 @@ struct Args {
     #[clap(long, value_name = "target")]
     stop: Option<String>,
 
-    #[clap(short = 'c', value_name = "CONFIG")]
-    cfg: Option<String>,
+    #[clap(long, short = 'c', value_name = "CONFIG")]
+    config: Option<String>,
 }
 
 fn main() -> Result<(), ()> {
     // Do some magic
-    let args = Args::parse();
+    let args = &ARGS;
 
     #[allow(dead_code)]
-    match (args.install, args.uninstall, args.start, args.stop) {
+    match (&args.install, &args.uninstall, &args.start, &args.stop) {
         (None, None, None, None) => platform_main(),
         (Some(_method), None, None, None) => {
             #[cfg(not(target_os = "windows"))]
@@ -108,10 +142,7 @@ fn main() -> Result<(), ()> {
 
 #[cfg(not(target_os = "windows"))]
 fn platform_main() -> Result<(), ()> {
-    match Runtime::new().unwrap().block_on(launch(None)) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(()), // TODO: Do it properly
-    }
+    launcher(None)
 }
 
 #[cfg(target_os = "windows")]
