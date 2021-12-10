@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use wireguard_control::{Backend, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
+use wireguard_control::{Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
 use crate::vpnctrl::error::{
@@ -38,7 +38,7 @@ impl PlatformInterface for Interface {
 
         Ok(Interface {
             ifname,
-            backend: Backend::Kernel,
+            backend: Backend::Userspace,
             privkey: Key::zero(),
             pubkey: Key::zero(),
             port: 0,
