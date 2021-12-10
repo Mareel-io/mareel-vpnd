@@ -27,7 +27,10 @@ lazy_static! {
 }
 
 //#[launch]
-pub(crate) async fn launch(shdn: Option<Receiver<()>>, daemon_cfg: &config::Config) -> Result<(), rocket::Error> {
+pub(crate) async fn launch(
+    shdn: Option<Receiver<()>>,
+    daemon_cfg: &config::Config,
+) -> Result<(), rocket::Error> {
     let listen = match &daemon_cfg.api.listen {
         Some(x) => x,
         None => "127.0.0.1",
@@ -73,10 +76,7 @@ fn launcher(shdn: Option<Receiver<()>>) -> Result<(), ()> {
 
     let cfg = read_config(cfgpath, ARGS.config.is_some());
 
-    match Runtime::new()
-        .unwrap()
-        .block_on(launch(shdn, &cfg))
-    {
+    match Runtime::new().unwrap().block_on(launch(shdn, &cfg)) {
         Ok(_) => Ok(()),
         Err(_) => Err(()), // TODO: Do it properly
     }
