@@ -5,7 +5,8 @@ use crate::{
     vpnctrl::platform_specific::common::WgPeerCfg,
 };
 
-use super::{tokenauth::ApiKey, PeerConfig};
+use super::PeerConfig;
+use crate::api::tokenauth::ApiKey;
 
 #[post("/interface/<if_id>/peer", format = "json", data = "<peercfg>")]
 pub(crate) async fn create_peer(
@@ -89,16 +90,16 @@ pub(crate) async fn get_peer(
     }
 }
 
-#[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
-pub(crate) async fn update_peer(
-    _apikey: ApiKey,
-    iface_store: &State<InterfaceStore>,
-    if_id: String,
-    pubk: String,
-    peercfg: Json<PeerConfig>,
-) -> Option<Json<String>> {
-    None
-}
+//#[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
+//pub(crate) async fn update_peer(
+//    _apikey: ApiKey,
+//    iface_store: &State<InterfaceStore>,
+//    if_id: String,
+//    pubk: String,
+//    peercfg: Json<PeerConfig>,
+//) -> Option<Json<String>> {
+//    None
+//}
 
 #[delete("/interface/<if_id>/peer/<pubk>")]
 pub(crate) async fn delete_peer(

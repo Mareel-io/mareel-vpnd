@@ -3,9 +3,14 @@ use std::sync::Arc;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 
+use super::AuthKeyProvider;
+
+#[cfg(feature = "keytar")]
 const KEYTAR_PACKAGE_NAME: &str = "io.mareel.vpn.vpnd";
+#[cfg(feature = "keytar")]
 const KEYTAR_ACC_NAME: &str = "apikey";
 
+#[cfg(feature = "keytar")]
 lazy_static! {
     static ref APITOKEN: Arc<Option<String>> = {
         // Load API key from keytar
@@ -30,14 +35,16 @@ impl<'r> FromRequest<'r> for ApiKey {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let key = match req.rocket().state::<AuthKeyProvider>() {
+            Some(x) => &x.auth_key,
+            None => return Outcome::Failure((Status::InternalServerError, ())),
+        };
+
         let keys: Vec<&str> = req.headers().get("Authorization").collect();
         match keys.len() {
-            1 => match Option::as_ref(&APITOKEN) {
-                Some(x) => match x.as_str() == keys[0] {
-                    true => Outcome::Success(Self),
-                    false => Outcome::Failure((Status::Unauthorized, ())),
-                },
-                None => Outcome::Failure((Status::InternalServerError, ())),
+            1 => match key == keys[0] {
+                true => Outcome::Success(Self),
+                false => Outcome::Failure((Status::Unauthorized, ())),
             },
             _ => Outcome::Failure((Status::Unauthorized, ())),
         }

@@ -12,7 +12,6 @@ use super::common::ApiError;
 
 mod interface;
 mod peer;
-mod tokenauth;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -97,14 +96,14 @@ pub(crate) fn stage() -> AdHoc {
                     interface::create_iface,
                     interface::get_ifaces,
                     interface::get_iface,
-                    interface::update_iface,
+                    //interface::update_iface,
                     interface::delete_iface,
                     interface::get_status,
                     interface::put_status,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,
-                    peer::update_peer,
+                    //peer::update_peer,
                     peer::delete_peer,
                 ],
             )

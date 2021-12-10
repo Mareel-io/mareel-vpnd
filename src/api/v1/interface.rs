@@ -8,8 +8,8 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::tokenauth::ApiKey;
 use super::{IfaceState, InterfaceConfig, InterfaceStore};
+use crate::api::tokenauth::ApiKey;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -126,14 +126,14 @@ pub(crate) async fn get_iface(
     }
 }
 
-#[put("/interface/<id>", format = "json", data = "<ifcfg>")]
-pub(crate) async fn update_iface(
-    _apikey: ApiKey,
-    id: String,
-    ifcfg: Json<InterfaceConfig>,
-) -> (Status, Option<Json<String>>) {
-    (Status::NotImplemented, None)
-}
+//#[put("/interface/<id>", format = "json", data = "<ifcfg>")]
+//pub(crate) async fn update_iface(
+//    _apikey: ApiKey,
+//    id: String,
+//    ifcfg: Json<InterfaceConfig>,
+//) -> (Status, Option<Json<String>>) {
+//    (Status::NotImplemented, None)
+//}
 
 #[delete("/interface/<id>")]
 pub(crate) async fn delete_iface(

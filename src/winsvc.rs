@@ -72,10 +72,7 @@ pub fn run_service() -> windows_service::Result<()> {
         process_id: None,
     })?;
 
-    Runtime::new()
-        .unwrap()
-        .block_on(super::launch(Some(shdn_rx)))
-        .unwrap();
+    super::launcher(Some(shdn_rx)).unwrap();
 
     // Tell the system that service has stopped.
     status_handle.set_service_status(ServiceStatus {
