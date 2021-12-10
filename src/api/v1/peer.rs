@@ -89,16 +89,16 @@ pub(crate) async fn get_peer(
     }
 }
 
-#[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
-pub(crate) async fn update_peer(
-    _apikey: ApiKey,
-    iface_store: &State<InterfaceStore>,
-    if_id: String,
-    pubk: String,
-    peercfg: Json<PeerConfig>,
-) -> Option<Json<String>> {
-    None
-}
+//#[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
+//pub(crate) async fn update_peer(
+//    _apikey: ApiKey,
+//    iface_store: &State<InterfaceStore>,
+//    if_id: String,
+//    pubk: String,
+//    peercfg: Json<PeerConfig>,
+//) -> Option<Json<String>> {
+//    None
+//}
 
 #[delete("/interface/<if_id>/peer/<pubk>")]
 pub(crate) async fn delete_peer(

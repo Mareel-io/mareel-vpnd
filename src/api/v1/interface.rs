@@ -126,14 +126,14 @@ pub(crate) async fn get_iface(
     }
 }
 
-#[put("/interface/<id>", format = "json", data = "<ifcfg>")]
-pub(crate) async fn update_iface(
-    _apikey: ApiKey,
-    id: String,
-    ifcfg: Json<InterfaceConfig>,
-) -> (Status, Option<Json<String>>) {
-    (Status::NotImplemented, None)
-}
+//#[put("/interface/<id>", format = "json", data = "<ifcfg>")]
+//pub(crate) async fn update_iface(
+//    _apikey: ApiKey,
+//    id: String,
+//    ifcfg: Json<InterfaceConfig>,
+//) -> (Status, Option<Json<String>>) {
+//    (Status::NotImplemented, None)
+//}
 
 #[delete("/interface/<id>")]
 pub(crate) async fn delete_iface(
