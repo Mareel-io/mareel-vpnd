@@ -71,6 +71,7 @@ fn main() -> Result<(), ()> {
     // Do some magic
     let args = Args::parse();
 
+    #[allow(dead_code)]
     match (args.install, args.uninstall, args.start, args.stop) {
         (None, None, None, None) => platform_main(),
         (Some(_method), None, None, None) => {
@@ -79,28 +80,28 @@ fn main() -> Result<(), ()> {
             #[cfg(target_os = "windows")]
             winsvc::install().unwrap();
             Ok(())
-        },
+        }
         (None, Some(_method), None, None) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
             winsvc::uninstall().unwrap();
             Ok(())
-        },
-        (None, None, Some(_method, ), None) => {
+        }
+        (None, None, Some(_method), None) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
             winsvc::start().unwrap();
             Ok(())
-        },
-        (None, None, None, Some(_method, )) => {
+        }
+        (None, None, None, Some(_method)) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
             winsvc::stop().unwrap();
             Ok(())
-        },
+        }
         (_, _, _, _) => panic!("Cannot do those things at the same time!"),
     }
 }

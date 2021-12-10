@@ -74,8 +74,19 @@ pub(crate) async fn get_peer(
     iface_store: &State<InterfaceStore>,
     if_id: String,
     pubk: String,
-) -> Option<Json<PeerConfig>> {
-    None
+) -> (Status, Option<Json<PeerConfig>>) {
+    let iface_states = iface_store.iface_states.lock().unwrap();
+    let iface_state = match iface_states.get(&if_id) {
+        Some(x) => x,
+        None => return (Status::NotFound, None),
+    }
+    .lock()
+    .unwrap();
+
+    match iface_state.peer_cfgs.get(&pubk) {
+        Some(x) => (Status::Ok, Some(Json(x.clone()))),
+        None => (Status::NotFound, None),
+    }
 }
 
 #[put("/interface/<if_id>/peer/<pubk>", format = "json", data = "<peercfg>")]
@@ -95,6 +106,24 @@ pub(crate) async fn delete_peer(
     iface_store: &State<InterfaceStore>,
     if_id: String,
     pubk: String,
-) -> Option<String> {
-    None
+) -> (Status, Option<String>) {
+    let iface_states = iface_store.iface_states.lock().unwrap();
+    let mut iface_state = match iface_states.get(&if_id) {
+        Some(x) => x,
+        None => return (Status::NotFound, None),
+    }
+    .lock()
+    .unwrap();
+
+    if iface_state.peer_cfgs.get(&pubk).is_none() {
+        return (Status::NotFound, None);
+    };
+
+    iface_state.peer_cfgs.remove(&pubk);
+    match iface_state.interface.remove_peer(pubk) {
+        Ok(_) => (),
+        Err(_) => return (Status::InternalServerError, None),
+    };
+
+    (Status::Ok, Some("Peer removed".to_string()))
 }
