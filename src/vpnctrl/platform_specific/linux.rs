@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr, net::SocketAddr};
 
-use wireguard_control::{Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
+use wireguard_control::{Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder, AllowedIp};
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
 use crate::vpnctrl::error::{
@@ -112,6 +112,32 @@ impl PlatformInterface for Interface {
             Some(x) => peercfg.set_preshared_key(x),
             None => peercfg,
         };
+
+        peercfg = match peer.endpoint {
+            Some(ref x) => {
+                let endpt: SocketAddr = match x.parse() {
+                    Ok(x) => x,
+                    Err(_) => {
+                        return Err(Box::new(BadParameterError::new(
+                            "Invalid endpoint format".to_string(),
+                        )))
+                    }
+                };
+
+                peercfg.set_endpoint(endpt)
+            }
+            None => peercfg,
+        };
+
+        let allowed_ips: Vec<AllowedIp> = peer
+            .allowed_ips
+            .iter()
+            .map(|x| AllowedIp::from_str(x))
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
+        peercfg = peercfg.add_allowed_ips(&allowed_ips.as_slice());
 
         match DeviceUpdate::new()
             .add_peer(peercfg)

@@ -113,7 +113,32 @@ impl PlatformInterface for Interface {
             None => peercfg,
         };
 
-        //
+        peercfg = match peer.endpoint {
+            Some(ref x) => {
+                let endpt: SocketAddr = match x.parse() {
+                    Ok(x) => x,
+                    Err(_) => {
+                        return Err(Box::new(BadParameterError::new(
+                            "Invalid endpoint format".to_string(),
+                        )))
+                    }
+                };
+
+                peercfg.set_endpoint(endpt)
+            }
+            None => peercfg,
+        };
+
+        let allowed_ips: Vec<AllowedIp> = peer
+            .allowed_ips
+            .iter()
+            .map(|x| AllowedIp::from_str(x))
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
+        peercfg = peercfg.add_allowed_ips(&allowed_ips.as_slice());
+
         match DeviceUpdate::new()
             .add_peer(peercfg)
             .apply(&self.ifname, self.backend)
