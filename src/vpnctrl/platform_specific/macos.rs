@@ -59,7 +59,10 @@ impl PlatformInterface for Interface {
 
         let mut update = DeviceUpdate::new().set_private_key(self.privkey.clone());
         update = match cfg.listen_port {
-            Some(x) => update.set_listen_port(x),
+            Some(x) => {
+                self.port = x;
+                update.set_listen_port(x)
+            }
             None => update,
         };
 

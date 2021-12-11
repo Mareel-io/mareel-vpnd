@@ -1,9 +1,10 @@
-use std::sync::Arc;
-
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 
 use super::AuthKeyProvider;
+
+#[cfg(feature = "keytar")]
+use std::sync::Arc;
 
 #[cfg(feature = "keytar")]
 const KEYTAR_PACKAGE_NAME: &str = "io.mareel.vpn.vpnd";
