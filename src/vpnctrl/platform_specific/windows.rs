@@ -164,7 +164,7 @@ impl PlatformInterface for Interface {
             .collect())
     }
 
-    fn get_peer(&self, pubkey: String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
+    fn get_peer(&self, pubkey: &String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
         let pk = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
@@ -182,7 +182,7 @@ impl PlatformInterface for Interface {
         }
     }
 
-    fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_peer(&mut self, pubkey: &String) -> Result<(), Box<dyn VpnctrlError>> {
         let pubkey = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {

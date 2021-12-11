@@ -121,7 +121,7 @@ pub(crate) async fn delete_peer(
     };
 
     iface_state.peer_cfgs.remove(&pubk);
-    match iface_state.interface.remove_peer(pubk) {
+    match iface_state.interface.remove_peer(&pubk) {
         Ok(_) => (),
         Err(_) => return (Status::InternalServerError, None),
     };
