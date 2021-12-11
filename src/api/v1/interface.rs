@@ -56,7 +56,7 @@ pub(crate) async fn create_iface(
     let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
         Ok(mut x) => {
             match x.set_config(WgIfCfg {
-                listen_port: None,
+                listen_port: ifcfg.listen_port,
                 privkey: private_key,
             }) {
                 Ok(_) => Box::new(x),

@@ -2,7 +2,6 @@
 // Licensed under Apache-2.0
 
 use rocket::futures::executor::block_on;
-use rocket::tokio::runtime::Runtime;
 use std::ffi::{OsStr, OsString};
 use std::thread;
 use windows_service::service_control_handler::{self, ServiceControlHandlerResult};

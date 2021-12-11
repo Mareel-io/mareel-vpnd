@@ -59,7 +59,10 @@ impl PlatformInterface for Interface {
 
         let mut update = DeviceUpdate::new().set_private_key(self.privkey.clone());
         update = match cfg.listen_port {
-            Some(x) => update.set_listen_port(x),
+            Some(x) => {
+                self.port = x;
+                update.set_listen_port(x)
+            }
             None => update,
         };
 
@@ -113,7 +116,32 @@ impl PlatformInterface for Interface {
             None => peercfg,
         };
 
-        //
+        peercfg = match peer.endpoint {
+            Some(ref x) => {
+                let endpt: SocketAddr = match x.parse() {
+                    Ok(x) => x,
+                    Err(_) => {
+                        return Err(Box::new(BadParameterError::new(
+                            "Invalid endpoint format".to_string(),
+                        )))
+                    }
+                };
+
+                peercfg.set_endpoint(endpt)
+            }
+            None => peercfg,
+        };
+
+        let allowed_ips: Vec<AllowedIp> = peer
+            .allowed_ips
+            .iter()
+            .map(|x| AllowedIp::from_str(x))
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
+        peercfg = peercfg.add_allowed_ips(&allowed_ips.as_slice());
+
         match DeviceUpdate::new()
             .add_peer(peercfg)
             .apply(&self.ifname, self.backend)
@@ -135,7 +163,7 @@ impl PlatformInterface for Interface {
         Ok(self.peers.values().cloned().collect())
     }
 
-    fn get_peer(&self, pubkey: String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
+    fn get_peer(&self, pubkey: &String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
         let pk = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
@@ -153,7 +181,7 @@ impl PlatformInterface for Interface {
         }
     }
 
-    fn remove_peer(&mut self, pubkey: String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_peer(&mut self, pubkey: &String) -> Result<(), Box<dyn VpnctrlError>> {
         let pk = match Key::from_base64(&pubkey) {
             Ok(x) => x,
             Err(_) => {
