@@ -134,6 +134,11 @@ impl PlatformInterface for Interface {
             None => peercfg,
         };
 
+        peercfg = match peer.keep_alive {
+            Some(x) => peercfg.set_persistent_keepalive_interval(x),
+            None => peercfg,
+        };
+
         let allowed_ips: Vec<AllowedIp> = peer
             .allowed_ips
             .iter()
