@@ -58,6 +58,7 @@ pub(crate) async fn create_iface(
             match x.set_config(WgIfCfg {
                 listen_port: ifcfg.listen_port,
                 privkey: private_key,
+                fwmark: 0x74616368, // 'tach'
             }) {
                 Ok(_) => Box::new(x),
                 Err(_e) => {
