@@ -11,7 +11,9 @@ use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
-use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgPeerCfg};
+use super::common::{
+    InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgPeerCfg,
+};
 
 #[cfg(target_arch = "x86_64")]
 const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/amd64/wireguard.dll";
@@ -213,6 +215,12 @@ impl PlatformInterface for Interface {
 
     fn get_status(&self) -> InterfaceStatus {
         self.status.clone()
+    }
+
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
     }
 
     fn up(&mut self) -> bool {
