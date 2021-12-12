@@ -2,6 +2,12 @@ use core::fmt;
 
 pub trait VpnctrlError {}
 
+impl fmt::Display for dyn VpnctrlError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "VpnctrlError")
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct BadParameterError {
     msg: String,

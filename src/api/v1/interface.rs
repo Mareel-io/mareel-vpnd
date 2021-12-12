@@ -227,7 +227,7 @@ pub(crate) async fn put_ips(
                 Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
                 Err(e) => (Status::InternalServerError, None),
             }
-        }
+        },
         None => (Status::NotFound, None),
     }
 }
@@ -239,5 +239,14 @@ pub(crate) async fn post_routes(
     id: String,
     route: Json<RouteConfigurationMessage>,
 ) -> (Status, Option<Json<String>>) {
-    (Status::NotImplemented, None)
+    match iface_store.iface_states.lock().unwrap().get(&id) {
+        Some(x) => {
+            let intf = &mut x.lock().unwrap().interface;
+            match intf.add_route(&route.cidr) {
+                Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
+                Err(e) => (Status::InternalServerError, Some(Json(e.to_string()))),
+            }
+        },
+        None => (Status::NotFound, None),
+    }
 }

@@ -18,6 +18,7 @@ pub struct Interface {
     privkey: Key,
     pubkey: Key,
     port: u16,
+    fwmark: u32,
     peers: HashMap<[u8; 32], WgPeerCfg>,
     status: InterfaceStatus,
 }
@@ -47,6 +48,7 @@ impl PlatformInterface for Interface {
             privkey: Key::zero(),
             pubkey: Key::zero(),
             port: 0,
+            fwmark: 0,
             peers: HashMap::new(),
             status: InterfaceStatus::Stopped,
         })
@@ -61,6 +63,7 @@ impl PlatformInterface for Interface {
                 )))
             }
         };
+        self.fwmark = cfg.fwmark;
 
         let mut update = DeviceUpdate::new().set_private_key(self.privkey.clone());
         update = match cfg.listen_port {
@@ -82,7 +85,12 @@ impl PlatformInterface for Interface {
             }
         };
 
-        Ok(())
+        match netlink::add_rule(cfg.fwmark, cfg.fwmark, 0x7363) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Box::new(InternalError::new(
+                "Failed to set routing rule".to_string(),
+            ))),
+        }
     }
 
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>> {
@@ -277,10 +285,15 @@ impl PlatformInterface for Interface {
         Ok(())
     }
 
-    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+    fn add_route(&mut self, cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        let ipn: IpNetwork = match cidr.parse() {
+            Ok(x) => x,
+            Err(_) => return Err(Box::new(BadParameterError::new("bad cidr".to_string()))),
+        };
+        match netlink::add_route(&self.ifname, self.fwmark, ipn) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Box::new(InternalError::new("Internal error".to_string()))),
+        }
     }
 
     fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {

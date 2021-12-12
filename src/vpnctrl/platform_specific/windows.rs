@@ -239,10 +239,8 @@ impl PlatformInterface for Interface {
         }
     }
 
-    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+    fn add_route(&mut self, _ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        Ok(()) // wireguard-nt library does some routing stuff, so just ignore it for now...
     }
 
     fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {

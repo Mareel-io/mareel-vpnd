@@ -59,7 +59,7 @@ pub(crate) struct IpConfigurationMessage {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub(crate) struct RouteConfigurationMessage {
-    //
+    cidr: String,
 }
 
 pub(crate) struct InterfaceStore {
@@ -106,9 +106,12 @@ struct HeartbeatMessage {
 
 #[get("/heartbeat")]
 async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
-    (Status::Ok, Json(HeartbeatMessage{
-        magic: "0x4e6f6374696c756361".into()
-    }))
+    (
+        Status::Ok,
+        Json(HeartbeatMessage {
+            magic: "0x4e6f6374696c756361".into(),
+        }),
+    )
 }
 
 pub(crate) fn stage() -> AdHoc {
@@ -127,6 +130,7 @@ pub(crate) fn stage() -> AdHoc {
                     interface::get_status,
                     interface::put_status,
                     interface::put_ips,
+                    interface::post_routes,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,

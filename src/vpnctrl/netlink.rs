@@ -2,12 +2,14 @@ use ipnetwork::IpNetwork;
 use netlink_packet_core::{
     NetlinkMessage, NetlinkPayload, NLM_F_ACK, NLM_F_CREATE, NLM_F_EXCL, NLM_F_REQUEST,
 };
+
+use netlink_packet_route::address;
+use netlink_packet_route::constants::*;
+use netlink_packet_route::link::{self, nlas::State};
+
 use netlink_packet_route::{
-    address,
-    constants::*,
-    link::{self, nlas::State},
-    route, AddressHeader, AddressMessage, LinkHeader, LinkMessage, RouteHeader, RouteMessage,
-    RtnlMessage, RTN_UNICAST, RT_SCOPE_LINK, RT_TABLE_MAIN,
+    route, rule, AddressHeader, AddressMessage, LinkHeader, LinkMessage, RouteHeader, RouteMessage,
+    RtnlMessage, RuleHeader, RuleMessage, RTN_UNICAST, RT_SCOPE_LINK, RT_TABLE_MAIN,
 };
 use netlink_sys::{protocols::NETLINK_ROUTE, Socket, SocketAddr};
 use std::{io, net::IpAddr};
@@ -135,7 +137,55 @@ pub fn set_addr(interface: &InterfaceName, addr: IpNetwork) -> Result<(), io::Er
     Ok(())
 }
 
-pub fn add_route(interface: &InterfaceName, cidr: IpNetwork) -> Result<bool, io::Error> {
+pub fn add_rule(fwmark: u32, table: u32, prio: u32) -> Result<bool, io::Error> {
+    let message = RuleMessage {
+        header: RuleHeader {
+            family: AF_INET as u8,
+            action: FR_ACT_TO_TBL,
+            flags: FIB_RULE_INVERT,
+            ..Default::default()
+        },
+        nlas: vec![
+            rule::Nla::FwMark(fwmark),
+            rule::Nla::Table(table),
+            rule::Nla::Priority(prio),
+        ],
+    };
+
+    match netlink_call(RtnlMessage::NewRule(message), None) {
+        Ok(_) => Ok(true),
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn _remove_rule(fwmark: u32, table: u32, prio: u32) -> Result<bool, io::Error> {
+    let message = RuleMessage {
+        header: RuleHeader {
+            family: AF_INET as u8,
+            action: FR_ACT_TO_TBL,
+            flags: FIB_RULE_INVERT,
+            ..Default::default()
+        },
+        nlas: vec![
+            rule::Nla::FwMark(fwmark),
+            rule::Nla::Table(table),
+            rule::Nla::Priority(prio),
+        ],
+    };
+
+    match netlink_call(RtnlMessage::DelRule(message), None) {
+        Ok(_) => Ok(true),
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn add_route(
+    interface: &InterfaceName,
+    table: u32,
+    cidr: IpNetwork,
+) -> Result<bool, io::Error> {
     let if_index = if_nametoindex(interface)?;
     let (address_family, dst) = match cidr {
         IpNetwork::V4(network) => (AF_INET as u8, network.network().octets().to_vec()),
@@ -143,7 +193,6 @@ pub fn add_route(interface: &InterfaceName, cidr: IpNetwork) -> Result<bool, io:
     };
     let message = RouteMessage {
         header: RouteHeader {
-            table: RT_TABLE_MAIN,
             protocol: RTPROT_BOOT,
             scope: RT_SCOPE_LINK,
             kind: RTN_UNICAST,
@@ -151,7 +200,11 @@ pub fn add_route(interface: &InterfaceName, cidr: IpNetwork) -> Result<bool, io:
             address_family,
             ..Default::default()
         },
-        nlas: vec![route::Nla::Destination(dst), route::Nla::Oif(if_index)],
+        nlas: vec![
+            route::Nla::Destination(dst),
+            route::Nla::Oif(if_index),
+            route::Nla::Table(table),
+        ],
     };
 
     match netlink_call(RtnlMessage::NewRoute(message), None) {
