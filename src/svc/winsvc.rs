@@ -71,7 +71,7 @@ pub fn run_service() -> windows_service::Result<()> {
         process_id: None,
     })?;
 
-    super::launcher(Some(shdn_rx)).unwrap();
+    super::super::launcher(Some(shdn_rx)).unwrap();
 
     // Tell the system that service has stopped.
     status_handle.set_service_status(ServiceStatus {
@@ -87,7 +87,7 @@ pub fn run_service() -> windows_service::Result<()> {
     Ok(())
 }
 
-pub fn install() -> windows_service::Result<()> {
+pub fn install(config: &Option<String>) -> windows_service::Result<()> {
     let manager_access = ServiceManagerAccess::CONNECT | ServiceManagerAccess::CREATE_SERVICE;
     let service_manager = ServiceManager::local_computer(None::<&str>, manager_access)?;
 
@@ -96,6 +96,11 @@ pub fn install() -> windows_service::Result<()> {
     // that implements windows service.
     let service_binary_path = ::std::env::current_exe().unwrap();
 
+    let args: Vec<OsString> = match config {
+        Some(x) => vec!["--config".into(), x.into()],
+        None => vec![],
+    };
+
     let service_info = ServiceInfo {
         name: OsString::from(SERVICE_ID),
         display_name: OsString::from(SERVICE_NAME),
@@ -103,7 +108,7 @@ pub fn install() -> windows_service::Result<()> {
         start_type: ServiceStartType::AutoStart,
         error_control: ServiceErrorControl::Normal,
         executable_path: service_binary_path,
-        launch_arguments: vec![],
+        launch_arguments: args,
         dependencies: vec![],
         account_name: None, // run as System
         account_password: None,

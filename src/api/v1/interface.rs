@@ -8,7 +8,9 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::{IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage};
+use super::{
+    IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
+};
 use crate::api::tokenauth::ApiKey;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -228,4 +230,14 @@ pub(crate) async fn put_ips(
         }
         None => (Status::NotFound, None),
     }
+}
+
+#[post("/interface/<id>/routes", format = "json", data = "<route>")]
+pub(crate) async fn post_routes(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    id: String,
+    route: Json<RouteConfigurationMessage>,
+) -> (Status, Option<Json<String>>) {
+    (Status::NotImplemented, None)
 }

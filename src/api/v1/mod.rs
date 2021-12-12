@@ -56,6 +56,12 @@ pub(crate) struct IpConfigurationMessage {
     pub(crate) ipaddr: Vec<String>,
 }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+pub(crate) struct RouteConfigurationMessage {
+    //
+}
+
 pub(crate) struct InterfaceStore {
     iface_states: Mutex<HashMap<String, Arc<Mutex<IfaceState>>>>,
 }
