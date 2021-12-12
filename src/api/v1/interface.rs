@@ -2,7 +2,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiError, ApiResponse};
-use crate::vpnctrl::platform_specific::common::{InterfaceStatus, PlatformInterface, WgIfCfg};
+use crate::vpnctrl::platform_specific::common::{
+    InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg,
+};
 use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
 use rocket::State;
@@ -227,7 +229,7 @@ pub(crate) async fn put_ips(
                 Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
                 Err(e) => (Status::InternalServerError, None),
             }
-        },
+        }
         None => (Status::NotFound, None),
     }
 }
@@ -246,7 +248,25 @@ pub(crate) async fn post_routes(
                 Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
                 Err(e) => (Status::InternalServerError, Some(Json(e.to_string()))),
             }
-        },
+        }
+        None => (Status::NotFound, None),
+    }
+}
+
+#[get("/interface/<id>/traffic")]
+pub(crate) async fn get_trafficstat(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    id: String,
+) -> (Status, Option<Json<Vec<PeerTrafficStat>>>) {
+    match iface_store.iface_states.lock().unwrap().get(&id) {
+        Some(x) => {
+            let intf = &mut x.lock().unwrap().interface;
+            match intf.get_trafficstats() {
+                Ok(x) => (Status::Ok, Some(Json(x))),
+                Err(_) => return (Status::InternalServerError, None),
+            }
+        }
         None => (Status::NotFound, None),
     }
 }

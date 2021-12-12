@@ -52,6 +52,14 @@ impl ToString for InterfaceStatus {
     }
 }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct PeerTrafficStat {
+    pub(crate) pubkey: String,
+    pub(crate) rx_bytes: u64,
+    pub(crate) tx_bytes: u64,
+}
+
 pub trait PlatformInterface {
     fn new(name: &str) -> Result<Self, PlatformError>
     where
@@ -62,6 +70,7 @@ pub trait PlatformInterface {
     fn get_peer(&self, pubkey: &String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
     fn remove_peer(&mut self, pubkey: &String) -> Result<(), Box<dyn VpnctrlError>>;
     fn get_status(&self) -> InterfaceStatus;
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>>;
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
     fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>>;
