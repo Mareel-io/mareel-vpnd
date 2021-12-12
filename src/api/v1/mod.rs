@@ -131,6 +131,7 @@ pub(crate) fn stage() -> AdHoc {
                     interface::put_status,
                     interface::put_ips,
                     interface::post_routes,
+                    interface::get_trafficstat,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,

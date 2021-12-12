@@ -5,7 +5,9 @@ use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
 };
 
-use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
+use super::common::{
+    InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
+};
 use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
@@ -241,6 +243,27 @@ impl PlatformInterface for Interface {
 
     fn get_status(&self) -> InterfaceStatus {
         self.status.clone()
+    }
+
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>> {
+        let dev = match Device::get(&self.ifname, self.backend) {
+            Ok(x) => x,
+            Err(_) => {
+                return Err(Box::new(EntryNotFoundError::new(
+                    "Entry not found".to_string(),
+                )))
+            }
+        };
+
+        Ok(dev
+            .peers
+            .into_iter()
+            .map(|x| PeerTrafficStat {
+                pubkey: x.config.public_key.to_base64(),
+                rx_bytes: x.stats.rx_bytes,
+                tx_bytes: x.stats.tx_bytes,
+            })
+            .collect())
     }
 
     fn up(&mut self) -> bool {
