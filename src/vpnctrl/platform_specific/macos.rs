@@ -238,7 +238,7 @@ impl PlatformInterface for Interface {
         true
     }
 
-    fn set_ip(&mut self, ip: Vec<String>) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
         Err(Box::new(InternalError::new(
             "Not implemented yet".to_string(),
         )))

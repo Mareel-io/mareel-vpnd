@@ -225,7 +225,7 @@ impl PlatformInterface for Interface {
         self.iface.down()
     }
 
-    fn set_ip(&mut self, ips: Vec<String>) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
         let iplist: Vec<IpNet> = ips
             .into_iter()
             .map(|x| IpNet::from_str(&x))
