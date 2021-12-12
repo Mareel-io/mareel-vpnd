@@ -28,7 +28,7 @@ pub(crate) struct InterfaceConfig {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub(crate) struct PeerConfig {
-    pub(crate) pubk: String,
+    pub(crate) pubkey: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) psk: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

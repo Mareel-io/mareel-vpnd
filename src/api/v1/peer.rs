@@ -23,13 +23,13 @@ pub(crate) async fn create_peer(
     .lock()
     .unwrap();
 
-    if iface_state.peer_cfgs.get(&peercfg.pubk).is_some() {
+    if iface_state.peer_cfgs.get(&peercfg.pubkey).is_some() {
         return (Status::Conflict, None);
     };
 
     // Do some magic
     match iface_state.interface.add_peer(WgPeerCfg {
-        pubkey: peercfg.pubk.clone(),
+        pubkey: peercfg.pubkey.clone(),
         psk: None,
         endpoint: peercfg.endpoint.clone(),
         allowed_ips: peercfg.allowed_ips.clone(),
@@ -41,7 +41,7 @@ pub(crate) async fn create_peer(
 
     iface_state
         .peer_cfgs
-        .insert(peercfg.pubk.clone(), peercfg.into_inner());
+        .insert(peercfg.pubkey.clone(), peercfg.into_inner());
 
     let ret: ApiResponse<String> = ApiResponse {
         status: Some("ok".to_string()),
