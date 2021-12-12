@@ -117,7 +117,7 @@ fn main() -> Result<(), ()> {
             #[cfg(target_os = "windows")]
             {
                 match method.as_str() {
-                    "winsvc" => svc::winsvc::install().unwrap(),
+                    "winsvc" => svc::winsvc::install(&args.config).unwrap(),
                     _ => panic!("Not supported feature: {}", method),
                 };
                 return Ok(());
