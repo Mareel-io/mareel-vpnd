@@ -9,6 +9,8 @@ use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
+use super::super::netlink;
+
 pub struct Interface {
     ifname: InterfaceName,
     backend: Backend,
@@ -231,20 +233,23 @@ impl PlatformInterface for Interface {
     }
 
     fn up(&mut self) -> bool {
-        let device = match Device::get(&self.ifname, self.backend) {
-            Ok(x) => x,
-            Err(_) => {
-                return false;
-            }
-        };
-
-        self.status = InterfaceStatus::Running;
-        true
+        match netlink::set_up(&self.ifname, 1420) {
+            Ok(_) => {
+                self.status = InterfaceStatus::Running;
+                true
+            },
+            Err(_) => false,
+        }
     }
 
     fn down(&mut self) -> bool {
-        self.status = InterfaceStatus::Stopped;
-        true
+        match netlink::set_down(&self.ifname) {
+            Ok(_) => {
+                self.status = InterfaceStatus::Stopped;
+                true
+            },
+            Err(_) => false,
+        }
     }
 
     fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {

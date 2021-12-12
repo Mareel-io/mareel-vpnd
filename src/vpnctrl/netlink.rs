@@ -86,6 +86,20 @@ pub fn set_up(interface: &InterfaceName, mtu: u32) -> Result<(), io::Error> {
     Ok(())
 }
 
+pub fn set_down(interface: &InterfaceName) -> Result<(), io::Error> {
+    let index = if_nametoindex(interface)?;
+    let message = LinkMessage {
+        header: LinkHeader {
+            index,
+            flags: IFF_DORMANT,
+            ..Default::default()
+        },
+        nlas: vec![],
+    };
+    netlink_call(RtnlMessage::SetLink(message), None)?;
+    Ok(())
+}
+
 pub fn set_addr(interface: &InterfaceName, addr: IpNetwork) -> Result<(), io::Error> {
     let index = if_nametoindex(interface)?;
     let (family, nlas) = match addr {
