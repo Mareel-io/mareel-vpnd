@@ -132,6 +132,11 @@ impl PlatformInterface for Interface {
             None => peercfg,
         };
 
+        peercfg = match peer.keep_alive {
+            Some(x) => peercfg.set_persistent_keepalive_interval(x),
+            None => peercfg,
+        };
+
         let allowed_ips: Vec<AllowedIp> = peer
             .allowed_ips
             .iter()
@@ -231,6 +236,24 @@ impl PlatformInterface for Interface {
     fn down(&mut self) -> bool {
         self.status = InterfaceStatus::Stopped;
         true
+    }
+
+    fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
+    }
+
+    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
+    }
+
+    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
     }
 }
 

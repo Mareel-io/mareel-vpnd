@@ -46,8 +46,14 @@ pub(crate) struct IfaceState {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
-struct DaemonControlMessage {
+pub(crate) struct DaemonControlMessage {
     pub(crate) magic: u32,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+pub(crate) struct IpConfigurationMessage {
+    pub(crate) ipaddr: Vec<String>,
 }
 
 pub(crate) struct InterfaceStore {
@@ -100,6 +106,7 @@ pub(crate) fn stage() -> AdHoc {
                     interface::delete_iface,
                     interface::get_status,
                     interface::put_status,
+                    interface::put_ips,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,

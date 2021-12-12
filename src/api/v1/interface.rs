@@ -8,7 +8,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::{IfaceState, InterfaceConfig, InterfaceStore};
+use super::{IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage};
 use crate::api::tokenauth::ApiKey;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -58,6 +58,7 @@ pub(crate) async fn create_iface(
             match x.set_config(WgIfCfg {
                 listen_port: ifcfg.listen_port,
                 privkey: private_key,
+                fwmark: 0x7370616b,
             }) {
                 Ok(_) => Box::new(x),
                 Err(_e) => {
@@ -205,6 +206,25 @@ pub(crate) async fn put_status(
                     status: intf.get_status().to_string(),
                 })),
             )
+        }
+        None => (Status::NotFound, None),
+    }
+}
+
+#[put("/interface/<id>/ips", format = "json", data = "<ips>")]
+pub(crate) async fn put_ips(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    id: String,
+    ips: Json<IpConfigurationMessage>,
+) -> (Status, Option<Json<String>>) {
+    match iface_store.iface_states.lock().unwrap().get(&id) {
+        Some(x) => {
+            let intf = &mut x.lock().unwrap().interface;
+            match intf.set_ip(&ips.ipaddr) {
+                Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
+                Err(e) => (Status::InternalServerError, None),
+            }
         }
         None => (Status::NotFound, None),
     }

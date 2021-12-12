@@ -25,6 +25,7 @@ impl PlatformError {
 pub struct WgIfCfg {
     pub listen_port: Option<u16>,
     pub privkey: String,
+    pub fwmark: u32,
 }
 
 #[derive(Clone)]
@@ -63,4 +64,7 @@ pub trait PlatformInterface {
     fn get_status(&self) -> InterfaceStatus;
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
+    fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>>;
+    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>>;
 }

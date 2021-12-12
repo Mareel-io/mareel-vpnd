@@ -5,8 +5,10 @@ use std::sync::Arc;
 
 use wireguard_nt::{Adapter, SetInterface, SetPeer};
 
+use ipnet::IpNet;
+
 use crate::vpnctrl::error::{
-    BadParameterError, DuplicatedEntryError, EntryNotFoundError, VpnctrlError,
+    BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
 use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgPeerCfg};
@@ -129,6 +131,14 @@ impl PlatformInterface for Interface {
             None => SocketAddr::from_str("0.0.0.0:0").unwrap(),
         };
 
+        let allowed_ips: Vec<IpNet> = peer
+            .allowed_ips
+            .iter()
+            .map(|x| IpNet::from_str(x))
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
         let mut pubk: [u8; 32] = [0; 32];
         pubk.copy_from_slice(&pubkey);
 
@@ -146,7 +156,7 @@ impl PlatformInterface for Interface {
                         preshared_key: psk,
                         keep_alive: peer.keep_alive,
                         endpoint,
-                        allowed_ips: vec![],
+                        allowed_ips: allowed_ips,
                     },
                 );
             }
@@ -213,6 +223,32 @@ impl PlatformInterface for Interface {
     fn down(&mut self) -> bool {
         self.status = InterfaceStatus::Stopped;
         self.iface.down()
+    }
+
+    fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
+        let iplist: Vec<IpNet> = ips
+            .into_iter()
+            .map(|x| IpNet::from_str(&x))
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
+        match self.iface.set_default_route(&iplist, &self.iface_cfg) {
+            Ok(()) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
+    }
+
+    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
+    }
+
+    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
     }
 }
 
