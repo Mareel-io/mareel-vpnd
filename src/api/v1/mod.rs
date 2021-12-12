@@ -98,6 +98,19 @@ async fn shutdown_daemon(
     }
 }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+struct HeartbeatMessage {
+    pub(crate) magic: String,
+}
+
+#[get("/heartbeat")]
+async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
+    (Status::Ok, Json(HeartbeatMessage{
+        magic: "0x4e6f6374696c756361".into()
+    }))
+}
+
 pub(crate) fn stage() -> AdHoc {
     AdHoc::on_ignite("API v1", |rocket| async {
         rocket
@@ -105,6 +118,7 @@ pub(crate) fn stage() -> AdHoc {
                 "/api/v1",
                 routes![
                     shutdown_daemon,
+                    heartbeat,
                     interface::create_iface,
                     interface::get_ifaces,
                     interface::get_iface,
