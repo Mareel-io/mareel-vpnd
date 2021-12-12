@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use wireguard_control::{Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder};
 
-use super::common::{InterfaceStatus, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg};
+use super::common::{
+    InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
+};
 use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
@@ -226,6 +228,12 @@ impl PlatformInterface for Interface {
 
     fn get_status(&self) -> InterfaceStatus {
         self.status.clone()
+    }
+
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>> {
+        Err(Box::new(InternalError::new(
+            "Not implemented yet".to_string(),
+        )))
     }
 
     fn up(&mut self) -> bool {
