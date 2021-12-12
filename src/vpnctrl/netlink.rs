@@ -60,7 +60,7 @@ fn netlink_call(
                 // We've parsed all parts of the response and can leave the loop.
                 NetlinkPayload::Ack(_) | NetlinkPayload::Done => return Ok(responses),
                 NetlinkPayload::Error(e) => return Err(e.into()),
-                _ => {},
+                _ => {}
             }
             offset += response.header.length as usize;
             if offset == n_received || response.header.length == 0 {
@@ -112,7 +112,7 @@ pub fn set_addr(interface: &InterfaceName, addr: IpNetwork) -> Result<(), io::Er
                     address::Nla::Address(addr_bytes),
                 ],
             )
-        },
+        }
         IpNetwork::V6(network) => (
             AF_INET6 as u8,
             vec![address::Nla::Address(network.ip().octets().to_vec())],
@@ -177,17 +177,24 @@ fn get_links() -> Result<Vec<String>, io::Error> {
             _ => None,
         })
         // Filter out loopback links
-        .filter_map(|link| if link.header.flags & IFF_LOOPBACK == 0 {
+        .filter_map(|link| {
+            if link.header.flags & IFF_LOOPBACK == 0 {
                 Some(link.nlas)
             } else {
                 None
-            })
+            }
+        })
         // Find and filter out addresses for interfaces
-        .filter(|nlas| nlas.iter().any(|nla| nla == &link::nlas::Nla::OperState(State::Up)))
-        .filter_map(|nlas| nlas.iter().find_map(|nla| match nla {
-            link::nlas::Nla::IfName(name) => Some(name.clone()),
-            _ => None,
-        }))
+        .filter(|nlas| {
+            nlas.iter()
+                .any(|nla| nla == &link::nlas::Nla::OperState(State::Up))
+        })
+        .filter_map(|nlas| {
+            nlas.iter().find_map(|nla| match nla {
+                link::nlas::Nla::IfName(name) => Some(name.clone()),
+                _ => None,
+            })
+        })
         .collect::<Vec<_>>();
 
     Ok(links)
@@ -210,26 +217,33 @@ pub fn get_local_addrs() -> Result<impl Iterator<Item = IpAddr>, io::Error> {
             _ => None,
         })
         // Filter out non-global-scoped addresses
-        .filter_map(|link| if link.header.scope == RT_SCOPE_UNIVERSE {
+        .filter_map(|link| {
+            if link.header.scope == RT_SCOPE_UNIVERSE {
                 Some(link.nlas)
             } else {
                 None
-            })
+            }
+        })
         // Only select addresses for helpful links
-        .filter(move |nlas| nlas.iter().any(|nla| matches!(nla, address::nlas::Nla::Label(label) if links.contains(label))))
-        .filter_map(|nlas| nlas.iter().find_map(|nla| match nla {
-            address::nlas::Nla::Address(name) if name.len() == 4 => {
-                let mut addr = [0u8; 4];
-                addr.copy_from_slice(name);
-                Some(IpAddr::V4(addr.into()))
-            },
-            address::nlas::Nla::Address(name) if name.len() == 16 => {
-                let mut addr = [0u8; 16];
-                addr.copy_from_slice(name);
-                Some(IpAddr::V6(addr.into()))
-            },
-            _ => None,
-        }));
+        .filter(move |nlas| {
+            nlas.iter()
+                .any(|nla| matches!(nla, address::nlas::Nla::Label(label) if links.contains(label)))
+        })
+        .filter_map(|nlas| {
+            nlas.iter().find_map(|nla| match nla {
+                address::nlas::Nla::Address(name) if name.len() == 4 => {
+                    let mut addr = [0u8; 4];
+                    addr.copy_from_slice(name);
+                    Some(IpAddr::V4(addr.into()))
+                }
+                address::nlas::Nla::Address(name) if name.len() == 16 => {
+                    let mut addr = [0u8; 16];
+                    addr.copy_from_slice(name);
+                    Some(IpAddr::V6(addr.into()))
+                }
+                _ => None,
+            })
+        });
     Ok(addrs)
 }
 

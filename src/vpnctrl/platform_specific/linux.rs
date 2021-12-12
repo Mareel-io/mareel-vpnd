@@ -1,5 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr, str::FromStr};
 
+use ipnetwork::IpNetwork;
 use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
 };
@@ -237,7 +238,7 @@ impl PlatformInterface for Interface {
             Ok(_) => {
                 self.status = InterfaceStatus::Running;
                 true
-            },
+            }
             Err(_) => false,
         }
     }
@@ -247,15 +248,31 @@ impl PlatformInterface for Interface {
             Ok(_) => {
                 self.status = InterfaceStatus::Stopped;
                 true
-            },
+            }
             Err(_) => false,
         }
     }
 
-    fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+    fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
+        let ipns: Vec<IpNetwork> = ips
+            .into_iter()
+            .map(|x| x.parse())
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .collect();
+
+        for ipn in ipns {
+            match netlink::set_addr(&self.ifname, ipn) {
+                Ok(_) => {}
+                Err(_) => {
+                    return Err(Box::new(InternalError::new(
+                        "Failed to set address".to_string(),
+                    )))
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
