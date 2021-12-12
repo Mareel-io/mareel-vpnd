@@ -17,10 +17,8 @@ extern crate lazy_static;
 
 mod api;
 mod config;
+mod svc;
 mod vpnctrl;
-
-#[cfg(target_os = "windows")]
-mod winsvc;
 
 lazy_static! {
     static ref ARGS: Args = Args::parse();
@@ -112,28 +110,28 @@ fn main() -> Result<(), ()> {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
-            winsvc::install().unwrap();
+            svc::winsvc::install().unwrap();
             Ok(())
         }
         (None, Some(_method), None, None) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
-            winsvc::uninstall().unwrap();
+            svc::winsvc::uninstall().unwrap();
             Ok(())
         }
         (None, None, Some(_method), None) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
-            winsvc::start().unwrap();
+            svc::winsvc::start().unwrap();
             Ok(())
         }
         (None, None, None, Some(_method)) => {
             #[cfg(not(target_os = "windows"))]
             panic!("Not supported yet!");
             #[cfg(target_os = "windows")]
-            winsvc::stop().unwrap();
+            svc::winsvc::stop().unwrap();
             Ok(())
         }
         (_, _, _, _) => panic!("Cannot do those things at the same time!"),
@@ -147,7 +145,7 @@ fn platform_main() -> Result<(), ()> {
 
 #[cfg(target_os = "windows")]
 fn platform_main() -> Result<(), ()> {
-    match winsvc::run() {
+    match svc::winsvc::run() {
         Ok(_) => Ok(()),
         Err(_) => Err(()), // TODO: Do it properly
     }

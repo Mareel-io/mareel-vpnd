@@ -71,6 +71,8 @@ impl PlatformInterface for Interface {
             None => update,
         };
 
+        update = update.set_fwmark(cfg.fwmark);
+
         match update.apply(&self.ifname, self.backend) {
             Ok(_) => (),
             Err(_) => {
