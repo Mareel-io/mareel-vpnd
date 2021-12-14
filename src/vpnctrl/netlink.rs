@@ -9,7 +9,7 @@ use netlink_packet_route::link::{self, nlas::State};
 
 use netlink_packet_route::{
     route, rule, AddressHeader, AddressMessage, LinkHeader, LinkMessage, RouteHeader, RouteMessage,
-    RtnlMessage, RuleHeader, RuleMessage, RTN_UNICAST, RT_SCOPE_LINK, RT_TABLE_MAIN,
+    RtnlMessage, RuleHeader, RuleMessage, RTN_UNICAST, RT_SCOPE_LINK,
 };
 use netlink_sys::{protocols::NETLINK_ROUTE, Socket, SocketAddr};
 use std::{io, net::IpAddr};
