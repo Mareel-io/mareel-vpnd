@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::api::common::{ApiError, ApiResponse};
+use crate::api::common::{ApiResponse, ApiResponseType};
 use crate::vpnctrl::platform_specific::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg,
 };
@@ -10,7 +10,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
-use super::{
+use super::types::{
     IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
 };
 use crate::api::tokenauth::ApiKey;
@@ -26,16 +26,16 @@ pub(crate) async fn create_iface(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
-) -> (Status, Result<Json<ApiResponse<String>>, Json<ApiError>>) {
+) -> ApiResponseType<String> {
     let private_key = match ifcfg.private_key.clone() {
         Some(pk) => pk,
         _ => {
             return (
                 Status::BadRequest,
-                Err(Json(ApiError {
-                    code: -1,
-                    msg: "Cannot create interface without its name nor private key".to_string(),
-                })),
+                ApiResponse::err(
+                    -1,
+                    "Cannot create interface without its name nor private key",
+                ),
             );
         }
     };
@@ -49,10 +49,7 @@ pub(crate) async fn create_iface(
     {
         return (
             Status::Conflict,
-            Err(Json(ApiError {
-                code: -1,
-                msg: "Cannot create interface with same name".to_string(),
-            })),
+            ApiResponse::err(-1, "Cannot create interface with same name"),
         );
     }
 
@@ -66,23 +63,14 @@ pub(crate) async fn create_iface(
             }) {
                 Ok(_) => Box::new(x),
                 Err(_e) => {
-                    return (
-                        Status::BadRequest,
-                        Err(Json(ApiError {
-                            code: -1,
-                            msg: "foo".to_string(),
-                        })),
-                    )
+                    return (Status::BadRequest, ApiResponse::err(-1, "Uh-oh. :("));
                 }
             }
         }
         Err(e) => {
             return (
                 Status::InternalServerError,
-                Err(Json(ApiError {
-                    code: -1,
-                    msg: e.to_string(),
-                })),
+                ApiResponse::err(-1, &e.to_string()),
             )
         }
     };
@@ -96,27 +84,26 @@ pub(crate) async fn create_iface(
         })),
     );
 
-    let ret: ApiResponse<String> = ApiResponse {
-        status: Some("ok".to_string()),
-        data: None,
-    };
-    (Status::Ok, Ok(Json(ret)))
+    (Status::Ok, ApiResponse::ok("ok".to_string()))
 }
 
 #[get("/interface")]
 pub(crate) async fn get_ifaces(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
-) -> Option<Json<Vec<InterfaceConfig>>> {
-    Some(Json(
-        iface_store
-            .iface_states
-            .lock()
-            .unwrap()
-            .values()
-            .map(|x| x.lock().unwrap().iface_cfg.clone())
-            .collect(),
-    ))
+) -> ApiResponseType<Vec<InterfaceConfig>> {
+    (
+        Status::Ok,
+        ApiResponse::ok(
+            iface_store
+                .iface_states
+                .lock()
+                .unwrap()
+                .values()
+                .map(|x| x.lock().unwrap().iface_cfg.clone())
+                .collect(),
+        ),
+    )
 }
 
 #[get("/interface/<id>")]
@@ -124,10 +111,13 @@ pub(crate) async fn get_iface(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
-) -> (Status, Option<Json<InterfaceConfig>>) {
+) -> ApiResponseType<InterfaceConfig> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
-        Some(x) => (Status::Ok, Some(Json(x.lock().unwrap().iface_cfg.clone()))),
-        None => (Status::NotFound, None),
+        Some(x) => (
+            Status::Ok,
+            ApiResponse::ok(x.lock().unwrap().iface_cfg.clone()),
+        ),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -145,7 +135,7 @@ pub(crate) async fn delete_iface(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
-) -> (Status, Option<Json<String>>) {
+) -> ApiResponseType<String> {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
     match ifaces.get(&id) {
         Some(x) => {
@@ -153,9 +143,9 @@ pub(crate) async fn delete_iface(
             iface.interface.down();
             drop(iface);
             ifaces.remove(&id);
-            (Status::Ok, Some(Json("ok".to_string())))
+            (Status::Ok, ApiResponse::ok("Ok".to_string()))
         }
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -165,15 +155,15 @@ pub(crate) async fn get_status(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
-) -> (Status, Option<Json<InterfaceStatusResp>>) {
+) -> ApiResponseType<InterfaceStatusResp> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => (
             Status::Ok,
-            Some(Json(InterfaceStatusResp {
+            ApiResponse::ok(InterfaceStatusResp {
                 status: x.lock().unwrap().interface.get_status().to_string(),
-            })),
+            }),
         ),
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -183,11 +173,11 @@ pub(crate) async fn put_status(
     iface_store: &State<InterfaceStore>,
     id: String,
     status: Json<InterfaceStatusResp>,
-) -> (Status, Option<Json<InterfaceStatusResp>>) {
+) -> ApiResponseType<InterfaceStatusResp> {
     let next_stat = match status.status.as_str() {
         "start" => InterfaceStatus::Running,
         "stop" => InterfaceStatus::Stopped,
-        _ => return (Status::BadRequest, None),
+        _ => return (Status::BadRequest, ApiResponse::err(-1, "Bad Request")),
     };
 
     match iface_store.iface_states.lock().unwrap().get(&id) {
@@ -206,12 +196,12 @@ pub(crate) async fn put_status(
             };
             (
                 Status::Ok,
-                Some(Json(InterfaceStatusResp {
+                ApiResponse::ok(InterfaceStatusResp {
                     status: intf.get_status().to_string(),
-                })),
+                }),
             )
         }
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -221,16 +211,19 @@ pub(crate) async fn put_ips(
     iface_store: &State<InterfaceStore>,
     id: String,
     ips: Json<IpConfigurationMessage>,
-) -> (Status, Option<Json<String>>) {
+) -> ApiResponseType<String> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             match intf.set_ip(&ips.ipaddr) {
-                Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
-                Err(e) => (Status::InternalServerError, None),
+                Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
+                Err(e) => (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, &e.to_string()),
+                ),
             }
         }
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -240,16 +233,19 @@ pub(crate) async fn post_routes(
     iface_store: &State<InterfaceStore>,
     id: String,
     route: Json<RouteConfigurationMessage>,
-) -> (Status, Option<Json<String>>) {
+) -> ApiResponseType<String> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             match intf.add_route(&route.cidr) {
-                Ok(_) => (Status::Ok, Some(Json("Ok".to_string()))),
-                Err(e) => (Status::InternalServerError, Some(Json(e.to_string()))),
+                Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
+                Err(e) => (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, &e.to_string()),
+                ),
             }
         }
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -258,15 +254,18 @@ pub(crate) async fn get_trafficstat(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
     id: String,
-) -> (Status, Option<Json<Vec<PeerTrafficStat>>>) {
+) -> ApiResponseType<Vec<PeerTrafficStat>> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             match intf.get_trafficstats() {
-                Ok(x) => (Status::Ok, Some(Json(x))),
-                Err(_) => return (Status::InternalServerError, None),
+                Ok(x) => (Status::Ok, ApiResponse::ok(x)),
+                Err(e) => (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, &e.to_string()),
+                ),
             }
         }
-        None => (Status::NotFound, None),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
