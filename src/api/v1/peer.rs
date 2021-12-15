@@ -65,6 +65,8 @@ pub(crate) async fn create_peer(
             ip_suffix & 0xFF00,
             ip_suffix & 0xFF
         ));
+
+        peercfg.autoalloc_v4 = Some(ip_suffix);
     }
 
     // Do some magic
@@ -146,6 +148,7 @@ pub(crate) async fn get_peer(
 pub(crate) async fn delete_peer(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
+    ip_store: &State<IpStore>,
     if_id: String,
     pubk: String,
 ) -> ApiResponseType<String> {
@@ -157,13 +160,25 @@ pub(crate) async fn delete_peer(
     .lock()
     .unwrap();
 
-    if iface_state.peer_cfgs.get(&pubk).is_none() {
-        return (Status::NotFound, ApiResponse::err(-1, "Not found"));
+    let peercfg = match iface_state.peer_cfgs.get(&pubk) {
+        Some(x) => x.clone(),
+        None => {
+            return (Status::NotFound, ApiResponse::err(-1, "Not found"));
+        }
     };
 
     iface_state.peer_cfgs.remove(&pubk);
     match iface_state.interface.remove_peer(&pubk) {
-        Ok(_) => (),
+        Ok(_) => {
+            if let Some(x) = peercfg.autoalloc_v4 {
+                let mut v4store = ip_store.v4.lock().unwrap();
+                v4store.remove(&x);
+            }
+            if let Some(x) = peercfg.autoalloc_v6 {
+                let mut v4store = ip_store.v6.lock().unwrap();
+                v4store.remove(&x);
+            }
+        },
         Err(e) => {
             return (
                 Status::InternalServerError,
