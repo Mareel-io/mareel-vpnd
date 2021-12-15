@@ -1,6 +1,5 @@
 use std::{collections::HashMap, net::SocketAddr, str::FromStr};
 
-use ipnetwork::IpNetwork;
 use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
 };
