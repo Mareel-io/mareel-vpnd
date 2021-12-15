@@ -51,7 +51,7 @@ jobs:
       - name: Merge dirs
         run: for i in *; do mv "$i"/* ./; rm -rf "$i"; done
       - name: Set perms
-        run: find type -f -exec chmod 755 '{}' \;
+        run: find -type f -exec chmod 755 '{}' \;
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
