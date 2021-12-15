@@ -3,7 +3,7 @@ use rocket::{http::Status, serde::json::Json, State};
 use crate::{
     api::{
         common::{ApiResponse, ApiResponseType},
-        v1::InterfaceStore,
+        v1::{types::IpStore, InterfaceStore},
     },
     vpnctrl::platform_specific::common::WgPeerCfg,
 };
@@ -15,9 +15,10 @@ use crate::api::tokenauth::ApiKey;
 pub(crate) async fn create_peer(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
+    ip_store: &State<IpStore>,
     if_id: String,
-    peercfg: Json<PeerConfig>,
-) -> ApiResponseType<String> {
+    mut peercfg: Json<PeerConfig>,
+) -> ApiResponseType<PeerConfig> {
     let iface_states = iface_store.iface_states.lock().unwrap();
     let mut iface_state = match iface_states.get(&if_id) {
         Some(x) => x,
@@ -29,6 +30,42 @@ pub(crate) async fn create_peer(
     if iface_state.peer_cfgs.get(&peercfg.pubkey).is_some() {
         return (Status::Conflict, ApiResponse::err(-1, "Conflict"));
     };
+
+    if Some(true) == peercfg.autoalloc {
+        let mut v4store = ip_store.v4.lock().unwrap();
+        let mut v4_last_count = ip_store.v4_last_count.lock().unwrap();
+
+        let mut ip_suffix: u32 = 0;
+        for _i in 1..0x1000000 {
+            *v4_last_count = match *v4_last_count {
+                0 => 2,
+                0xFFFFFF.. => 2,
+                _ => *v4_last_count + 1,
+            };
+
+            // Check existance
+            if v4store.get(&*v4_last_count).is_none() {
+                v4store.insert(*v4_last_count, true);
+                ip_suffix = *v4_last_count;
+                break;
+            }
+        }
+
+        if ip_suffix == 0 {
+            return (
+                Status::NotAcceptable,
+                ApiResponse::err(-1, "Resource not available"),
+            );
+        }
+
+        peercfg.allowed_ips = Vec::new();
+        peercfg.allowed_ips.push(format!(
+            "10.{}.{}.{}/32",
+            ip_suffix & 0xFF0000,
+            ip_suffix & 0xFF00,
+            ip_suffix & 0xFF
+        ));
+    }
 
     // Do some magic
     match iface_state.interface.add_peer(WgPeerCfg {
@@ -49,9 +86,9 @@ pub(crate) async fn create_peer(
 
     iface_state
         .peer_cfgs
-        .insert(peercfg.pubkey.clone(), peercfg.into_inner());
+        .insert(peercfg.pubkey.clone(), peercfg.clone());
 
-    (Status::Ok, ApiResponse::ok("Ok".to_string()))
+    (Status::Ok, ApiResponse::ok(peercfg.into_inner()))
 }
 
 #[get("/interface/<if_id>/peer")]

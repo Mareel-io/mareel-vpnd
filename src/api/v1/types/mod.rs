@@ -28,6 +28,8 @@ pub(crate) struct PeerConfig {
     pub(crate) allowed_ips: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) keepalive: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) autoalloc: Option<bool>,
 }
 
 pub(crate) struct IfaceState {
@@ -56,4 +58,11 @@ pub(crate) struct RouteConfigurationMessage {
 
 pub(crate) struct InterfaceStore {
     pub(crate) iface_states: Mutex<HashMap<String, Arc<Mutex<IfaceState>>>>,
+}
+
+pub(crate) struct IpStore {
+    pub(crate) v4: Mutex<HashMap<u32, bool>>,
+    pub(crate) v4_last_count: Mutex<u32>,
+    pub(crate) v6: Mutex<HashMap<u64, bool>>,
+    pub(crate) v6_last_count: Mutex<u64>,
 }

@@ -6,6 +6,8 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{serde, Shutdown, State};
 
+use self::types::IpStore;
+
 use super::common::{ApiResponse, ApiResponseType};
 
 use types::{DaemonControlMessage, InterfaceStore};
@@ -83,6 +85,12 @@ pub(crate) fn stage() -> AdHoc {
             )
             .manage(InterfaceStore {
                 iface_states: Mutex::new(HashMap::new()),
+            })
+            .manage(IpStore {
+                v4: Mutex::new(HashMap::new()),
+                v4_last_count: Mutex::new(0),
+                v6: Mutex::new(HashMap::new()),
+                v6_last_count: Mutex::new(0),
             })
     })
 }
