@@ -32,4 +32,11 @@ jobs:
           toolchain: stable
           override: true
       - name: Build
-        run: cargo build --release --target ${{ matrix.targets[1] }}
+        run: cargo build --release --target ${{ matrix.targets[1][0] }}
+      - name: Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.targets[0] }}
+          path: |
+            target/**/release/mareel-vpnd
+            target/**/release/mareel-vpnd.exe
