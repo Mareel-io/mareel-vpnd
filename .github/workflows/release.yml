@@ -49,7 +49,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
       - name: Merge dirs
-        run: mkdir bin; for i in *; do mv "$i"/* ./bin/; rm -rf "$i"; done
+        run: mkdir bin; for i in *; do if [ "$i" != 'bin' ]; then mv "$i"/* ./bin/; rm -rf "$i"; fi; done
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
       - name: Archive Release
