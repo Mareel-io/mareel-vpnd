@@ -49,7 +49,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
       - name: Merge dirs
-        run: for i in *; do mv "$i"/* ./; rm -rf "$i"; done
+        run: mkdir bin; for i in *; do mv "$i"/* ./bin/; rm -rf "$i"; done
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
       - name: Archive Release
@@ -57,9 +57,9 @@ jobs:
         with:
           type: 'tar'
           filename: 'release.tar.gz'
-          exclusions: 'release.tar.gz'
+          path: 'bin'
       - name: Upload release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "release.tar"
+          artifacts: "release.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
