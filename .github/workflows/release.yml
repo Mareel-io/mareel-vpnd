@@ -40,3 +40,19 @@ jobs:
           path: |
             target/**/release/mareel-vpnd
             target/**/release/mareel-vpnd.exe
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+      - name: Merge dirs
+        run: for i in *; do mv "$i"/* ./; rm -rf "$i"; done
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: multiplat
+          path: |
+            **/*
