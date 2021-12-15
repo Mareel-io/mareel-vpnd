@@ -1987,8 +1987,7 @@ dependencies = [
 [[package]]
 name = "wireguard-nt"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34985a6507f34b6476692c5957ff92f72568b34e1f2a749387cb664470cec3d1"
+source = "git+https://github.com/Mareel-io/wireguard-nt?branch=mareel#8ee864d027fddd836da61a7d035dfbba1b8b1ec9"
 dependencies = [
  "bitflags",
  "ipnet",

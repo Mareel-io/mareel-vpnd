@@ -33,7 +33,7 @@ libc = "0.2.111"
 wireguard-control = "1.5.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-wireguard-nt = "0.3"
+wireguard-nt = { git = "https://github.com/Mareel-io/wireguard-nt", branch = "mareel" }
 winapi = { version = "0.3", features = ["ws2def", "netioapi", "nldef", "winerror"] }
 windows-service = "0.4.0"
 libloading = "0.7"

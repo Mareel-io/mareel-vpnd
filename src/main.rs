@@ -97,11 +97,19 @@ struct Args {
 
     #[clap(long, short = 'c', value_name = "CONFIG")]
     config: Option<String>,
+
+    #[clap(long)]
+    foreground: bool,
 }
 
 fn main() -> Result<(), ()> {
     // Do some magic
     let args = &ARGS;
+
+    if args.foreground {
+        println!("Foreground mode requested. Skipping all service stuff.");
+        return launcher(None);
+    };
 
     match (&args.install, &args.uninstall, &args.start, &args.stop) {
         (None, None, None, None) => platform_main(),
