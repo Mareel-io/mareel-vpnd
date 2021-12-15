@@ -50,20 +50,15 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Merge dirs
         run: for i in *; do mv "$i"/* ./; rm -rf "$i"; done
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+      - name: Set perms
+        run: find type -f -exec chmod 755 '{}' \;
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
         with:
-          name: multiplat
-          path: |
-            **/*
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          type: 'tar'
+          filename: 'release.tar'
+      - name: Upload release
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: Automatic release for ${{ github.ref }}
-          draft: false
-          prerelease: false
+          artifacts: "release.tar"
+          token: ${{ secrets.GITHUB_TOKEN }}
