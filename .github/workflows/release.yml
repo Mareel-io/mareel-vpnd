@@ -56,7 +56,8 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'tar'
-          filename: 'release.tar'
+          filename: 'release.tar.gz'
+          exclusions: 'release.tar.gz'
       - name: Upload release
         uses: ncipollo/release-action@v1
         with:
