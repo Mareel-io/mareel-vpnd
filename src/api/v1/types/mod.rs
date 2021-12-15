@@ -30,6 +30,10 @@ pub(crate) struct PeerConfig {
     pub(crate) keepalive: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) autoalloc: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) autoalloc_v4: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) autoalloc_v6: Option<u64>,
 }
 
 pub(crate) struct IfaceState {
