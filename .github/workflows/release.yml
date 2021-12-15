@@ -1,0 +1,51 @@
+name: release
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-C target-feature=+crt-static"
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build
+      run: cargo build --release --target x86_64-unknown-linux-gnu
+
+  build-windows:
+    runs-on: windows-latest
+    env:
+      RUSTFLAGS: "-C target-feature=+crt-static"
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build
+      run: cargo build --release
+
+  build-mac:
+    runs-on: macos-latest
+    env:
+      RUSTFLAGS: "-C target-feature=+crt-static"
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build
+      run: cargo build --release --target x86_64-apple-darwin
