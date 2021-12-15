@@ -12,8 +12,8 @@ jobs:
       matrix:
         targets:
           - [ubuntu-latest, [x86_64-unknown-linux-gnu]]
-          - [windows-latest, [x86_64-pc-windows-msvc]]
-          - [macos-latest, [x86_64-apple-darwin]]
+          - [windows-latest, [x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]]
+          - [macos-latest, [x86_64-apple-darwin, aarch64-apple-darwin]]
         clang: [["13.0", "clang_13_0"]]
     env:
       RUSTFLAGS: "-C target-feature=+crt-static"
@@ -32,4 +32,4 @@ jobs:
           toolchain: stable
           override: true
       - name: Build
-        run: cargo build --release --target ${{ matrix.targets[1][0] }}
+        run: cargo build --release --target ${{ matrix.targets[1] }}
