@@ -36,7 +36,7 @@ pub(crate) async fn launch(
 
     let port = match &daemon_cfg.api.port {
         Some(x) => x.to_owned(),
-        None => 8080,
+        None => 29539,
     };
 
     let cfg = Config {
