@@ -113,8 +113,8 @@ fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
     }
     #[cfg(target_os = "windows")]
     {
-        match method.as_str() {
-            "winsvc" => svc::winsvc::install(&args.config).unwrap(),
+        match method {
+            "winsvc" => svc::winsvc::install(config).unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
         return Ok(());
@@ -136,7 +136,7 @@ fn svc_uninstall(method: &str) -> Result<(), ()> {
     }
     #[cfg(target_os = "windows")]
     {
-        match method.as_str() {
+        match method {
             "winsvc" => svc::winsvc::uninstall().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
@@ -159,7 +159,7 @@ fn svc_start(method: &str) -> Result<(), ()> {
     }
     #[cfg(target_os = "windows")]
     {
-        match method.as_str() {
+        match method {
             "winsvc" => svc::winsvc::start().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
@@ -182,7 +182,7 @@ fn svc_stop(method: &str) -> Result<(), ()> {
     }
     #[cfg(target_os = "windows")]
     {
-        match method.as_str() {
+        match method {
             "winsvc" => svc::winsvc::stop().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
