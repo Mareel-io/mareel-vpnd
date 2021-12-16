@@ -119,6 +119,10 @@ fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
         };
         return Ok(());
     }
+    #[allow(unreachable_code)]
+    {
+        panic!("Not supported yet!");
+    }
 }
 
 fn svc_uninstall(method: &str) -> Result<(), ()> {
