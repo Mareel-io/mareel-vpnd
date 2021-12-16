@@ -754,7 +754,7 @@ dependencies = [
 
 [[package]]
 name = "mareel-vpnd "
-version = "0.3.3"
+version = "0.3.5"
 dependencies = [
  "base64",
  "clap",

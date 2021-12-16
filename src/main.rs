@@ -102,6 +102,94 @@ struct Args {
     foreground: bool,
 }
 
+fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
+    #[cfg(target_os = "linux")]
+    {
+        match method {
+            "systemd" => svc::systemd::install(config).unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        match method.as_str() {
+            "winsvc" => svc::winsvc::install(&args.config).unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+}
+
+fn svc_uninstall(method: &str) -> Result<(), ()> {
+    #[cfg(target_os = "linux")]
+    {
+        match method {
+            "systemd" => svc::systemd::uninstall().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        match method.as_str() {
+            "winsvc" => svc::winsvc::uninstall().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[allow(unreachable_code)]
+    {
+        panic!("Not supported yet!");
+    }
+}
+
+fn svc_start(method: &str) -> Result<(), ()> {
+    #[cfg(target_os = "linux")]
+    {
+        match method {
+            "systemd" => svc::systemd::start().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        match method.as_str() {
+            "winsvc" => svc::winsvc::start().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[allow(unreachable_code)]
+    {
+        panic!("Not supported yet!");
+    }
+}
+
+fn svc_stop(method: &str) -> Result<(), ()> {
+    #[cfg(target_os = "linux")]
+    {
+        match method {
+            "systemd" => svc::systemd::stop().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        match method.as_str() {
+            "winsvc" => svc::winsvc::stop().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[allow(unreachable_code)]
+    {
+        panic!("Not supported yet!");
+    }
+}
+
 fn main() -> Result<(), ()> {
     // Do some magic
     let args = &ARGS;
@@ -113,94 +201,26 @@ fn main() -> Result<(), ()> {
 
     match (&args.install, &args.uninstall, &args.start, &args.stop) {
         (None, None, None, None) => platform_main(),
-        (Some(method), None, None, None) => {
-            #[cfg(target_os = "linux")]
-            {
-                match method.as_str() {
-                    "systemd" => svc::systemd::install(&args.config).unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
+        (Some(method), None, None, None) => svc_install(method.as_str(), &args.config),
+        (None, Some(method), None, None) => svc_uninstall(method.as_str()),
+        (None, None, Some(method), None) => svc_start(method.as_str()),
+        (None, None, None, Some(method)) => svc_stop(method.as_str()),
+        (Some(method), None, Some(method2), None) => {
+            match svc_install(method.as_str(), &args.config) {
+                Ok(_) => {},
+                Err(_) => {},
             }
-            #[cfg(target_os = "windows")]
-            {
-                match method.as_str() {
-                    "winsvc" => svc::winsvc::install(&args.config).unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
+
+            svc_start(method2.as_str())
+        },
+        (None, Some(method2), None, Some(method)) => {
+            match svc_stop(method.as_str()) {
+                Ok(_) => {},
+                Err(_) => {},
             }
-            #[allow(unreachable_code)]
-            {
-                panic!("Not supported yet!");
-            }
-        }
-        (None, Some(method), None, None) => {
-            #[cfg(target_os = "linux")]
-            {
-                match method.as_str() {
-                    "systemd" => svc::systemd::uninstall().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[cfg(target_os = "windows")]
-            {
-                match method.as_str() {
-                    "winsvc" => svc::winsvc::uninstall().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[allow(unreachable_code)]
-            {
-                panic!("Not supported yet!");
-            }
-        }
-        (None, None, Some(method), None) => {
-            #[cfg(target_os = "linux")]
-            {
-                match method.as_str() {
-                    "systemd" => svc::systemd::start().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[cfg(target_os = "windows")]
-            {
-                match method.as_str() {
-                    "winsvc" => svc::winsvc::start().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[allow(unreachable_code)]
-            {
-                panic!("Not supported yet!");
-            }
-        }
-        (None, None, None, Some(method)) => {
-            #[cfg(target_os = "linux")]
-            {
-                match method.as_str() {
-                    "systemd" => svc::systemd::stop().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[cfg(target_os = "windows")]
-            {
-                match method.as_str() {
-                    "winsvc" => svc::winsvc::stop().unwrap(),
-                    _ => panic!("Not supported feature: {}", method),
-                };
-                return Ok(());
-            }
-            #[allow(unreachable_code)]
-            {
-                panic!("Not supported yet!");
-            }
-        }
+
+            svc_uninstall(method2.as_str())
+        },
         (_, _, _, _) => panic!("Cannot do those things at the same time!"),
     }
 }
