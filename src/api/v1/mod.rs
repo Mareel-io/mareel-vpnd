@@ -45,6 +45,7 @@ async fn shutdown_daemon(
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 struct HeartbeatMessage {
+    pub(crate) version: String,
     pub(crate) magic: String,
 }
 
@@ -53,6 +54,7 @@ async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
     (
         Status::Ok,
         Json(HeartbeatMessage {
+            version: env!("CARGO_PKG_VERSION").to_string(),
             magic: "0x4e6f6374696c756361".into(),
         }),
     )

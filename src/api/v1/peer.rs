@@ -178,7 +178,7 @@ pub(crate) async fn delete_peer(
                 let mut v4store = ip_store.v6.lock().unwrap();
                 v4store.remove(&x);
             }
-        },
+        }
         Err(e) => {
             return (
                 Status::InternalServerError,
