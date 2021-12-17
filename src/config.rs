@@ -5,6 +5,7 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Config {
     pub api: Api,
+    pub wireguard: WireguardConfig,
 }
 
 #[derive(Deserialize)]
@@ -13,6 +14,13 @@ pub struct Api {
     pub port: Option<u16>,
     pub apikey: String,
 }
+
+#[derive(Deserialize)]
+pub struct WireguardConfig {
+    pub userspace: Option<String>,
+}
+
+pub const WG_USERSPACE_IMPL: &str = "./boringtun";
 
 pub fn read_config(cfgpath: &str, panic_on_notfound: bool) -> Config {
     match fs::read_to_string(cfgpath) {
@@ -24,6 +32,9 @@ pub fn read_config(cfgpath: &str, panic_on_notfound: bool) -> Config {
                     listen: None,
                     port: None,
                     apikey: "crowbar".to_string(),
+                },
+                wireguard: WireguardConfig {
+                    userspace: Some(WG_USERSPACE_IMPL.to_string()),
                 },
             },
         },
