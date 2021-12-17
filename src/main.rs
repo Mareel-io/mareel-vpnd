@@ -101,6 +101,9 @@ struct Args {
 
     #[clap(long)]
     foreground: bool,
+
+    #[clap(long, value_name = "wireguard userspace daemon")]
+    wireguard: Option<String>,
 }
 
 fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
@@ -199,41 +202,40 @@ fn main() -> Result<(), ()> {
     // Do some magic
     let args = &ARGS;
 
-    // Duct-tape.
-    #[cfg(not(target_os = "windows"))]
-    {
-        // Read config file
-        let cfgpath = match &ARGS.config {
-            Some(x) => x,
-            None => "./mareel-vpnd.toml",
-        };
+    // Read config file
+    let cfgpath = match &ARGS.config {
+        Some(x) => x,
+        None => "./mareel-vpnd.toml",
+    };
 
-        let cfg = read_config(cfgpath, ARGS.config.is_some());
-        let wg_impl = cfg
+    let cfg = read_config(cfgpath, ARGS.config.is_some());
+    let wg_impl = match args.wireguard.clone() {
+        Some(x) => x,
+        None => cfg
             .wireguard
             .userspace
-            .unwrap_or_else(|| WG_USERSPACE_IMPL.to_string());
-        match std::env::var("WG_USERSPACE_IMPLEMENTATION") {
-            Ok(x) => {
-                if x != wg_impl {
-                    // Re-launch!!
-                    Command::new(std::env::current_exe().unwrap())
-                        .args(std::env::args().skip(1))
-                        .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                        .spawn()
-                        .expect("Failed to re-launch daemon!");
-                    return Ok(());
-                }
-            }
-            Err(_) => {
-                // Re-launch!
+            .unwrap_or_else(|| WG_USERSPACE_IMPL.to_string()),
+    };
+    match std::env::var("WG_USERSPACE_IMPLEMENTATION") {
+        Ok(x) => {
+            if x != wg_impl {
+                // Re-launch!!
                 Command::new(std::env::current_exe().unwrap())
                     .args(std::env::args().skip(1))
                     .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                    .spawn()
+                    .status()
                     .expect("Failed to re-launch daemon!");
                 return Ok(());
             }
+        }
+        Err(_) => {
+            // Re-launch!
+            Command::new(std::env::current_exe().unwrap())
+                .args(std::env::args().skip(1))
+                .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+                .status()
+                .expect("Failed to re-launch daemon!");
+            return Ok(());
         }
     }
 
