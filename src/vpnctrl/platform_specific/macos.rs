@@ -48,7 +48,7 @@ impl PlatformInterface for Interface {
 
         let real_ifname: String = match resolve_tun(&ifname) {
             Ok(x) => x,
-            Err(x) => {
+            Err(_) => {
                 return Err(PlatformError::new("What the HELL?".to_string()));
             }
         };
@@ -254,14 +254,14 @@ impl PlatformInterface for Interface {
 
     fn up(&mut self) -> bool {
         Command::new("ifconfig")
-            .arg(self.real_ifname)
+            .arg(&self.real_ifname)
             .arg("mtu")
             .arg("1420")
             .output()
             .expect("Failed to set MTU!");
 
         Command::new("ifconfig")
-            .arg(self.real_ifname)
+            .arg(&self.real_ifname)
             .arg("up")
             .output()
             .expect("Failed to bring up interface!");
@@ -272,7 +272,7 @@ impl PlatformInterface for Interface {
 
     fn down(&mut self) -> bool {
         Command::new("ifconfig")
-            .arg(self.real_ifname)
+            .arg(&self.real_ifname)
             .arg("down")
             .output()
             .expect("Failed to bring down interface!");
@@ -284,9 +284,9 @@ impl PlatformInterface for Interface {
     fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
         // TODO: Support IPv6!
         match Command::new("ifconfig")
-            .arg(self.real_ifname)
+            .arg(&self.real_ifname)
             .arg("inet")
-            .arg(ip[0])
+            .arg(&ip[0])
             .output()
         {
             Ok(_) => Ok(()),
