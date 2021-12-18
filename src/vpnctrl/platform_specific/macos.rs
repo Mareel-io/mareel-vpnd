@@ -1,8 +1,13 @@
-use std::{collections::HashMap, net::SocketAddr, str::FromStr};
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::process::Command;
+use std::str::FromStr;
 
 use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
 };
+
+use wireguard_control::backends::userspace::resolve_tun;
 
 use super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
@@ -41,10 +46,10 @@ impl PlatformInterface for Interface {
             }
         }
 
-        let real_ifname: String = match resolve_tun(&self.ifname) {
+        let real_ifname: String = match resolve_tun(&ifname) {
             Ok(x) => x,
             Err(x) => {
-                return Err(PlatformError::new("What the HELL?"));
+                return Err(PlatformError::new("What the HELL?".to_string()));
             }
         };
 
