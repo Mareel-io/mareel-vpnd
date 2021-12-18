@@ -13,6 +13,7 @@ use crate::vpnctrl::error::{
 
 pub struct Interface {
     ifname: InterfaceName,
+    real_ifname: String,
     backend: Backend,
     privkey: Key,
     pubkey: Key,
@@ -40,8 +41,16 @@ impl PlatformInterface for Interface {
             }
         }
 
+        let real_ifname: String = match resolve_tun(&self.ifname) {
+            Ok(x) => x,
+            Err(x) => {
+                return Err(PlatformError::new("What the HELL?"));
+            }
+        };
+
         Ok(Interface {
             ifname,
+            real_ifname,
             backend: Backend::Userspace,
             privkey: Key::zero(),
             pubkey: Key::zero(),
@@ -239,31 +248,75 @@ impl PlatformInterface for Interface {
     }
 
     fn up(&mut self) -> bool {
+        Command::new("ifconfig")
+            .arg(self.real_ifname)
+            .arg("mtu")
+            .arg("1420")
+            .output()
+            .expect("Failed to set MTU!");
+
+        Command::new("ifconfig")
+            .arg(self.real_ifname)
+            .arg("up")
+            .output()
+            .expect("Failed to bring up interface!");
+
         self.status = InterfaceStatus::Running;
         true
     }
 
     fn down(&mut self) -> bool {
+        Command::new("ifconfig")
+            .arg(self.real_ifname)
+            .arg("down")
+            .output()
+            .expect("Failed to bring down interface!");
+
         self.status = InterfaceStatus::Stopped;
         true
     }
 
     fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+        // TODO: Support IPv6!
+        match Command::new("ifconfig")
+            .arg(self.real_ifname)
+            .arg("inet")
+            .arg(ip[0])
+            .output()
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
     }
 
     fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+        // TODO: Support IPv6!
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
+            .arg("add")
+            .arg("-inet")
+            .arg(ip)
+            .output()
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
     }
 
     fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+        // TODO: Support IPv6!
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
+            .arg("delete")
+            .arg("-inet")
+            .arg(ip)
+            .output()
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
     }
 }
 
