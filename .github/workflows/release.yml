@@ -46,12 +46,16 @@ jobs:
     needs:
       - build
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
       - name: Download artifacts
         uses: actions/download-artifact@v2
       - name: Merge dirs
         run: mkdir bin; for i in *; do if [ "$i" != 'bin' ]; then mv "$i"/* ./bin/; rm -rf "$i"; fi; done
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
+      - name: Extract Win32 drivers
+        run: ./ci/extract-driver.sh
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
