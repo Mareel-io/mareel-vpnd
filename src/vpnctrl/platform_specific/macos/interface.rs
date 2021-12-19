@@ -10,7 +10,7 @@ use wireguard_control::{
 
 use wireguard_control::backends::userspace::resolve_tun;
 
-use super::common::{
+use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
 };
 use crate::vpnctrl::error::{

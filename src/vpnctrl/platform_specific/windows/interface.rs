@@ -11,18 +11,19 @@ use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
-use super::common::{
+use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgPeerCfg,
 };
 
-#[cfg(target_arch = "x86_64")]
-const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/amd64/wireguard.dll";
-#[cfg(target_arch = "arm")]
-const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/arm/wireguard.dll";
-#[cfg(target_arch = "aarch64")]
-const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/arm64/wireguard.dll";
-#[cfg(target_arch = "x86")]
-const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/x86/wireguard.dll";
+//#[cfg(target_arch = "x86_64")]
+//const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/amd64/wireguard.dll";
+//#[cfg(target_arch = "arm")]
+//const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/arm/wireguard.dll";
+//#[cfg(target_arch = "aarch64")]
+//const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/arm64/wireguard.dll";
+//#[cfg(target_arch = "x86")]
+//const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/x86/wireguard.dll";
+const DRIVER_DLL_PATH: &str = "./wireguard.dll";
 
 const IF_POOL: &str = "Mareel VPN";
 
