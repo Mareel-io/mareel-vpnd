@@ -48,12 +48,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Directories
+        run: mkdir bin; mkdir artifacts
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          path: ./artifacts
+          path: "./artifacts"
       - name: Merge dirs
-        run: mkdir bin; for i in ./artifacts/*; do mv "$i"/* ./bin/; rm -rf "$i"; done
+        run: for i in ./artifacts/*; do mv "$i"/* ./bin/; rm -rf "$i"; done
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
       - name: Extract Win32 drivers
