@@ -17,6 +17,7 @@ toml = "0.5.8"
 serde = "1.0.131"
 log = "0.4.14"
 shell-escape = "0.1.5"
+regex = "1.5.4"
 
 [target.'cfg(feature = "keytar")'.dependencies]
 keytar = "0.1.6"

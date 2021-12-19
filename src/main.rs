@@ -16,8 +16,6 @@ extern crate rocket;
 #[macro_use]
 extern crate lazy_static;
 
-extern crate regex;
-
 mod api;
 mod config;
 mod svc;
