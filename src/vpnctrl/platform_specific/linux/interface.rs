@@ -5,14 +5,14 @@ use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
 };
 
-use super::common::{
+use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
 };
 use crate::vpnctrl::error::{
     BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
 };
 
-use super::super::netlink;
+use super::super::super::netlink;
 
 pub struct Interface {
     ifname: InterfaceName,
