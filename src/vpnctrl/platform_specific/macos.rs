@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::process::Command;
@@ -281,17 +282,26 @@ impl PlatformInterface for Interface {
         true
     }
 
-    fn set_ip(&mut self, ip: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
-        // TODO: Support IPv6!
-        match Command::new("ifconfig")
-            .arg(&self.real_ifname)
-            .arg("inet")
-            .arg(&ip[0])
-            .output()
-        {
-            Ok(_) => Ok(()),
-            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+    fn set_ip(&mut self, cidrs: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
+        let re = Regex::new(r"/.*").unwrap();
+
+        for cidr in cidrs {
+            let ip = re.replace_all(cidr, "");
+            // TODO: Support IPv6!
+            match Command::new("ifconfig")
+                .arg(&self.real_ifname)
+                .arg("inet")
+                .arg(cidr)
+                .arg(&*ip)
+                .arg("alias")
+                .output()
+            {
+                Ok(_) => {}
+                Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
+            };
         }
+
+        Ok(())
     }
 
     fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
