@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType};
 use crate::vpnctrl::platform_specific::common::{
-    InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg,
+    InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg, PlatformRoute,
 };
 use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
@@ -11,7 +11,7 @@ use rocket::State;
 use rocket::{http::Status, serde};
 
 use super::types::{
-    IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
+    IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage, RouteManagerStore,
 };
 use crate::api::tokenauth::ApiKey;
 
@@ -231,13 +231,14 @@ pub(crate) async fn put_ips(
 pub(crate) async fn post_routes(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
+    rms: &State<RouteManagerStore>,
     id: String,
     route: Json<RouteConfigurationMessage>,
 ) -> ApiResponseType<String> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
-            let intf = &mut x.lock().unwrap().interface;
-            match intf.add_route(&route.cidr) {
+            let mut rm = rms.route_manager.lock().unwrap();
+            match rm.add_route(&id, &route.cidr) {
                 Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
                 Err(e) => (
                     Status::InternalServerError,

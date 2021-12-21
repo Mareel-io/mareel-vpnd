@@ -3,7 +3,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::vpnctrl::platform_specific::common::PlatformInterface;
+use crate::vpnctrl::platform_specific::common::{PlatformInterface, PlatformRoute};
+use crate::vpnctrl::platform_specific::{Interface, Route};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -69,4 +70,8 @@ pub(crate) struct IpStore {
     pub(crate) v4_last_count: Mutex<u32>,
     pub(crate) v6: Mutex<HashMap<u64, bool>>,
     pub(crate) v6_last_count: Mutex<u64>,
+}
+
+pub(crate)struct RouteManagerStore {
+    pub route_manager: Mutex<Box<Route>>,
 }

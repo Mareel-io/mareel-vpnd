@@ -6,7 +6,10 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{serde, Shutdown, State};
 
-use self::types::IpStore;
+use crate::vpnctrl::platform_specific::common::PlatformRoute;
+use crate::vpnctrl::platform_specific::{PlatformSpecificFactory, Route};
+
+use self::types::{IpStore, RouteManagerStore};
 
 use super::common::{ApiResponse, ApiResponseType};
 
@@ -62,6 +65,13 @@ async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
 
 pub(crate) fn stage() -> AdHoc {
     AdHoc::on_ignite("API v1", |rocket| async {
+        let mut route_manager = Box::new(PlatformSpecificFactory::get_route(0x7370616b).unwrap());
+        match route_manager.init() {
+            Ok(_) => {},
+            Err(_) => {
+                panic!("Failed to initialize RouteManager!")
+            }
+        }
         rocket
             .mount(
                 "/api/v1",
@@ -87,6 +97,9 @@ pub(crate) fn stage() -> AdHoc {
             )
             .manage(InterfaceStore {
                 iface_states: Mutex::new(HashMap::new()),
+            })
+            .manage(RouteManagerStore {
+                route_manager: Mutex::new(route_manager),
             })
             .manage(IpStore {
                 v4: Mutex::new(HashMap::new()),

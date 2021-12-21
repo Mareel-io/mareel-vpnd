@@ -74,6 +74,14 @@ pub trait PlatformInterface {
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
     fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_route(&mut self, cidr: &String) -> Result<(), Box<dyn VpnctrlError>>;
-    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>>;
+}
+
+pub trait PlatformRoute {
+    fn new(fwmark: u32) -> Result<Self, PlatformError> where Self: Sized;
+    fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
+    fn add_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn remove_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn add_route_bypass(&mut self, address: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
+    fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
 }
