@@ -95,6 +95,19 @@ impl PlatformRoute for Route {
         match Command::new("route")
             .arg("-q")
             .arg("-n")
+            .arg("delete")
+            .arg("-inet")
+            .arg("default")
+            .output()
+        {
+            Ok(_) => {},
+            Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
+        };
+
+        // TODO: Support IPv6!
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
             .arg("add")
             .arg("-inet")
             .arg("default")
