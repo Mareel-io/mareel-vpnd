@@ -303,36 +303,6 @@ impl PlatformInterface for Interface {
 
         Ok(())
     }
-
-    fn add_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        // TODO: Support IPv6!
-        match Command::new("route")
-            .arg("-q")
-            .arg("-n")
-            .arg("add")
-            .arg("-inet")
-            .arg(ip)
-            .output()
-        {
-            Ok(_) => Ok(()),
-            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
-        }
-    }
-
-    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        // TODO: Support IPv6!
-        match Command::new("route")
-            .arg("-q")
-            .arg("-n")
-            .arg("delete")
-            .arg("-inet")
-            .arg(ip)
-            .output()
-        {
-            Ok(_) => Ok(()),
-            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
-        }
-    }
 }
 
 impl Drop for Interface {
