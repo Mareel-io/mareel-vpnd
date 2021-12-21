@@ -6,14 +6,18 @@ use wireguard_control::backends::userspace::resolve_tun;
 
 use wireguard_control::InterfaceName;
 
-pub struct Route {}
+pub struct Route {
+    default_gw: String,
+}
 
 impl PlatformRoute for Route {
     fn new(_fwmark: u32) -> Result<Self, PlatformError>
     where
         Self: Sized,
     {
-        Ok(Self {})
+        Ok(Self {
+            default_gw: "".to_string(),
+        })
     }
 
     fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
@@ -64,8 +68,21 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn add_route_bypass(&mut self, _address: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Ok(())
+    fn add_route_bypass(&mut self, address: &String) -> Result<(), Box<dyn VpnctrlError>> {
+        // TODO: Support IPv6!
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
+            .arg("add")
+            .arg("-inet")
+            .arg(address)
+            .arg("-gateway")
+            .arg(&self.default_gw)
+            .output()
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
     }
 
     fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
@@ -74,7 +91,20 @@ impl PlatformRoute for Route {
     }
 
     fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
-        Ok(())
+        // TODO: Support IPv6!
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
+            .arg("add")
+            .arg("-inet")
+            .arg("default")
+            .arg("-gateway")
+            .arg(&self.default_gw)
+            .output()
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
+        }
     }
 }
 
