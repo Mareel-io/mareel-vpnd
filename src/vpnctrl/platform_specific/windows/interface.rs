@@ -62,7 +62,10 @@ impl PlatformInterface for Interface {
         })
     }
 
-    fn set_config(&mut self, cfg: super::super::common::WgIfCfg) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_config(
+        &mut self,
+        cfg: super::super::common::WgIfCfg,
+    ) -> Result<(), Box<dyn VpnctrlError>> {
         self.privkey.copy_from_slice(
             &(match base64::decode(cfg.privkey) {
                 Ok(x) => x,

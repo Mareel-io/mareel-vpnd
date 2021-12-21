@@ -1,9 +1,9 @@
 use ipnetwork::IpNetwork;
 use wireguard_control::InterfaceName;
 
-use super::super::common::PlatformRoute;
 use super::super::common::PlatformError;
-use crate::vpnctrl::error::{VpnctrlError, BadParameterError, InternalError};
+use super::super::common::PlatformRoute;
+use crate::vpnctrl::error::{BadParameterError, InternalError, VpnctrlError};
 use crate::vpnctrl::netlink;
 
 pub struct Route {
@@ -11,10 +11,11 @@ pub struct Route {
 }
 
 impl PlatformRoute for Route {
-    fn new(fwmark: u32) -> Result<Self, PlatformError> where Self: Sized {
-        Ok(Self {
-            fwmark,
-        })
+    fn new(fwmark: u32) -> Result<Self, PlatformError>
+    where
+        Self: Sized,
+    {
+        Ok(Self { fwmark })
     }
 
     fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
@@ -30,7 +31,9 @@ impl PlatformRoute for Route {
         let wgc_ifname: InterfaceName = match ifname.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
-                return Err(Box::new(PlatformError::new("Invalid address format".to_string())));
+                return Err(Box::new(PlatformError::new(
+                    "Invalid address format".to_string(),
+                )));
             }
         };
 
@@ -44,7 +47,11 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn remove_route(&mut self, _ifname: &String, _cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_route(
+        &mut self,
+        _ifname: &String,
+        _cidr: &String,
+    ) -> Result<(), Box<dyn VpnctrlError>> {
         Err(Box::new(InternalError::new(
             "Not implemented yet".to_string(),
         )))

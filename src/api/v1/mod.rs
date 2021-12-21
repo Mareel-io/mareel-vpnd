@@ -67,7 +67,7 @@ pub(crate) fn stage() -> AdHoc {
     AdHoc::on_ignite("API v1", |rocket| async {
         let mut route_manager = Box::new(PlatformSpecificFactory::get_route(0x7370616b).unwrap());
         match route_manager.init() {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => {
                 panic!("Failed to initialize RouteManager!")
             }

@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType};
 use crate::vpnctrl::platform_specific::common::{
-    InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg, PlatformRoute,
+    InterfaceStatus, PeerTrafficStat, PlatformInterface, PlatformRoute, WgIfCfg,
 };
 use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
@@ -11,7 +11,8 @@ use rocket::State;
 use rocket::{http::Status, serde};
 
 use super::types::{
-    IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage, RouteManagerStore,
+    IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
+    RouteManagerStore,
 };
 use crate::api::tokenauth::ApiKey;
 

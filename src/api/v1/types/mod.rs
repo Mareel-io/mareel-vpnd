@@ -72,6 +72,6 @@ pub(crate) struct IpStore {
     pub(crate) v6_last_count: Mutex<u64>,
 }
 
-pub(crate)struct RouteManagerStore {
+pub(crate) struct RouteManagerStore {
     pub route_manager: Mutex<Box<Route>>,
 }

@@ -79,18 +79,9 @@ impl PlatformInterface for Interface {
         update = update.set_fwmark(cfg.fwmark);
 
         match update.apply(&self.ifname, self.backend) {
-            Ok(_) => (),
-            Err(_) => {
-                return Err(Box::new(InternalError::new(
-                    "Failed to update interface".to_string(),
-                )));
-            }
-        };
-
-        match netlink::add_rule(cfg.fwmark, cfg.fwmark, 0x7363) {
             Ok(_) => Ok(()),
             Err(_) => Err(Box::new(InternalError::new(
-                "Failed to set routing rule".to_string(),
+                "Failed to update interface".to_string(),
             ))),
         }
     }
