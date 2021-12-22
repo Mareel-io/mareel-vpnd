@@ -28,12 +28,19 @@ pub fn install(config: &Option<String>) -> Result<(), ()> {
         <string>/var/log/mareel-vpnd.log</string>
         <key>StandardOutPath</key>
         <string>/var/log/mareel-vpnd.log</string>
+        <key>UserName</key>
+        <string>root</string>
         <key>KeepAlive</key>
         <true/>
         <key>Label</key>
         <string>io.mareel.vpnd</string>
         <key>RunAtLoad</key>
         <true/>
+        <key>SoftResourceLimits</key>
+        <dict>
+                <key>NumberOfFiles</key>
+                <integer>1024</integer>
+        </dict>
         <key>WorkingDirectory</key>
         <string>{}</string>
         <key>ProgramArguments</key>
