@@ -55,7 +55,7 @@ pub(crate) async fn create_iface(
         );
     }
 
-    let iface_states = iface_store.iface_states.lock().unwrap();
+    let mut iface_states = iface_store.iface_states.lock().unwrap();
 
     if iface_states.keys().len() == 0 {
         // No keys found. back up the route!
@@ -93,7 +93,7 @@ pub(crate) async fn create_iface(
         }
     };
 
-    iface_store.iface_states.lock().unwrap().insert(
+    iface_states.insert(
         ifcfg.name.clone(),
         Arc::new(Mutex::new(IfaceState {
             interface: iface,
