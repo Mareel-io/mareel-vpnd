@@ -15,10 +15,7 @@ pub fn install(config: &Option<String>) -> Result<(), ()> {
             service_binary_path.to_string_lossy(),
             std::borrow::Cow::Borrowed(x),
         ),
-        None => format!(
-            "<string>{}</string>",
-            service_binary_path.to_string_lossy()
-        ),
+        None => format!("<string>{}</string>", service_binary_path.to_string_lossy()),
     };
     let launchd_unit_path: PathBuf = LAUNCHD_UNIT_PATH.into();
     let launchd_unit = format!(
@@ -48,6 +45,11 @@ pub fn install(config: &Option<String>) -> Result<(), ()> {
 "##,
         working_dir.to_str().unwrap(),
         exec_cmd
+    );
+
+    println!(
+        "Installed unit with workdir {}",
+        working_dir.to_str().unwrap()
     );
 
     let mut unit_file = File::create(launchd_unit_path).unwrap();
