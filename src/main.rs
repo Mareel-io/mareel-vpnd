@@ -123,6 +123,14 @@ fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
         };
         return Ok(());
     }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::install(config).unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
     #[allow(unreachable_code)]
     {
         panic!("Not supported yet!");
@@ -142,6 +150,14 @@ fn svc_uninstall(method: &str) -> Result<(), ()> {
     {
         match method {
             "winsvc" => svc::winsvc::uninstall().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::uninstall().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
         return Ok(());
