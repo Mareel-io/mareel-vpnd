@@ -73,7 +73,7 @@ pub(crate) async fn create_peer(
         peercfg.autoalloc_v4 = Some(ip_suffix);
     }
 
-    if let Some(endpt) = peercfg.endpoint {
+    if let Some(endpt) = &peercfg.endpoint {
         let mut rm = rms.route_manager.lock().unwrap();
         match rm.add_route_bypass(&endpt) {
             Ok(_) => {}
@@ -165,6 +165,7 @@ pub(crate) async fn get_peer(
 #[delete("/interface/<if_id>/peer/<pubk>")]
 pub(crate) async fn delete_peer(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ip_store: &State<IpStore>,
     if_id: String,
@@ -185,17 +186,17 @@ pub(crate) async fn delete_peer(
         }
     };
 
-    if let Some(endpt) = peercfg.endpoint {
-        let mut rm = rms.route_manager.lock().unwrap();
-        match rm.remove_route_bypass(&endpt) {
-            Ok(_) => {}
-            Err(_x) => {
-                //return (
-                //    Status::InternalServerError,
-                //    ApiResponse::err(-1, "Failed to bypass peer endpt"),
-                //);
-            }
-        }
+    if let Some(endpt) = &peercfg.endpoint {
+        //let mut rm = rms.route_manager.lock().unwrap();
+        //match rm.delete_route_bypass(&endpt) {
+        //    Ok(_) => {}
+        //    Err(_x) => {
+        //        //return (
+        //        //    Status::InternalServerError,
+        //        //    ApiResponse::err(-1, "Failed to bypass peer endpt"),
+        //        //);
+        //    }
+        //}
     }
 
     iface_state.peer_cfgs.remove(&pubk);
