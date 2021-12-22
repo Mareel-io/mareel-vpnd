@@ -1,3 +1,4 @@
+use regex::Regex;
 use rocket::{http::Status, serde::json::Json, State};
 
 use crate::{
@@ -75,7 +76,9 @@ pub(crate) async fn create_peer(
 
     if let Some(endpt) = &peercfg.endpoint {
         let mut rm = rms.route_manager.lock().unwrap();
-        match rm.add_route_bypass(&endpt) {
+        let re = Regex::new(r":.*").unwrap();
+        let ip = re.replace_all(&endpt, "");
+        match rm.add_route_bypass(&(*ip).to_string()) {
             Ok(_) => {}
             Err(_x) => {
                 return (
