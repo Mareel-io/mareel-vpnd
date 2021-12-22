@@ -7,7 +7,8 @@ const LAUNCHD_UNIT_PATH: &str = "/Library/LaunchDaemons/io.mareel.vpnd.plist";
 
 pub fn install(config: &Option<String>) -> Result<(), ()> {
     let service_binary_path = ::std::env::current_exe().unwrap();
-    let working_dir = ::std::env::current_dir().unwrap();
+    let mut working_dir = ::std::env::current_exe().unwrap();
+    working_dir.pop();
     // ugly xml...
     let exec_cmd = match config {
         Some(x) => format!(
