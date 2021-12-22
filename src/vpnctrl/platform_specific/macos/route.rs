@@ -8,6 +8,7 @@ use wireguard_control::InterfaceName;
 
 pub struct Route {
     default_gw: (String, String),
+    default_route_removed: bool,
 }
 
 impl PlatformRoute for Route {
@@ -17,6 +18,7 @@ impl PlatformRoute for Route {
     {
         Ok(Self {
             default_gw: ("".to_string(), "".to_string()),
+            default_route_removed: false,
         })
     }
 
@@ -47,7 +49,11 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn remove_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_route(
+        &mut self,
+        ifname: &String,
+        cidr: &String,
+    ) -> Result<(), Box<dyn VpnctrlError>> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
             Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
@@ -86,12 +92,24 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+    fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
         // Back up default route
         self.default_gw = match Self::get_default_node_cmd("-inet") {
             Ok(x) => x,
             Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
         };
+
+        self.default_route_removed = false;
+
+        Ok(())
+    }
+
+    fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+        if self.default_route_removed {
+            return Ok(());
+        }
+
+        self.default_route_removed = true;
 
         // TODO: Support IPv6!
         match Command::new("route")
@@ -108,6 +126,11 @@ impl PlatformRoute for Route {
     }
 
     fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+        if !self.default_route_removed {
+            return Ok(());
+        }
+
+        self.default_route_removed = false;
         // TODO: Support IPv6!
         match Command::new("route")
             .arg("-q")

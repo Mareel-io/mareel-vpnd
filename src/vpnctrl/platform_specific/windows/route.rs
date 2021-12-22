@@ -34,6 +34,10 @@ impl PlatformRoute for Route {
         Ok(())
     }
 
+    fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+        Ok(())
+    }
+
     fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
         Ok(())
     }

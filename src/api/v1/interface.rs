@@ -25,6 +25,7 @@ pub(crate) struct InterfaceStatusResp {
 #[post("/interface", format = "json", data = "<ifcfg>")]
 pub(crate) async fn create_iface(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
 ) -> ApiResponseType<String> {
@@ -52,6 +53,22 @@ pub(crate) async fn create_iface(
             Status::Conflict,
             ApiResponse::err(-1, "Cannot create interface with same name"),
         );
+    }
+
+    let iface_states = iface_store.iface_states.lock().unwrap();
+
+    if iface_states.keys().len() == 0 {
+        // No keys found. back up the route!
+        let mut rm = rms.route_manager.lock().unwrap();
+        match rm.backup_default_route() {
+            Ok(_) => {}
+            Err(_x) => {
+                return (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, "Uh-oh. :("),
+                );
+            }
+        }
     }
 
     // Create interface
@@ -239,6 +256,18 @@ pub(crate) async fn post_routes(
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
             let mut rm = rms.route_manager.lock().unwrap();
+            if route.cidr == "0.0.0.0/0" {
+                match rm.remove_default_route() {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return (
+                            Status::InternalServerError,
+                            ApiResponse::err(-1, &e.to_string()),
+                        )
+                    }
+                }
+            }
+
             match rm.add_route(&id, &route.cidr) {
                 Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
                 Err(e) => (

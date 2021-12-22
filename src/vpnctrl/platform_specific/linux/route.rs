@@ -62,6 +62,11 @@ impl PlatformRoute for Route {
         Ok(())
     }
 
+    fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+        // No need for this. fwmark will handle clutter for us
+        Ok(())
+    }
+
     fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
         // No need for this. fwmark will handle clutter for us
         Ok(())
