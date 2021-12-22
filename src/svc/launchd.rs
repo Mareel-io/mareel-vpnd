@@ -51,6 +51,8 @@ pub fn install(config: &Option<String>) -> Result<(), ()> {
     unit_file.write(launchd_unit.as_bytes()).unwrap();
     unit_file.sync_all().unwrap();
     drop(unit_file);
+
+    Ok(())
 }
 
 pub fn start() -> Result<(), ()> {
