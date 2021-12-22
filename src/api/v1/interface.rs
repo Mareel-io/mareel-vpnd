@@ -151,10 +151,21 @@ pub(crate) async fn get_iface(
 #[delete("/interface/<id>")]
 pub(crate) async fn delete_iface(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> ApiResponseType<String> {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
+    let mut rm = rms.route_manager.lock().unwrap();
+    match rm.restore_default_route() {
+        Ok(_) => {}
+        Err(_x) => {
+            return (
+                Status::InternalServerError,
+                ApiResponse::err(-1, "Uh-oh. :("),
+            );
+        }
+    }
     match ifaces.get(&id) {
         Some(x) => {
             let mut iface = x.lock().unwrap();

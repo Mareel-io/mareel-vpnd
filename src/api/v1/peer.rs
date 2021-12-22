@@ -3,9 +3,12 @@ use rocket::{http::Status, serde::json::Json, State};
 use crate::{
     api::{
         common::{ApiResponse, ApiResponseType},
-        v1::{types::IpStore, InterfaceStore},
+        v1::{
+            types::{IpStore, RouteManagerStore},
+            InterfaceStore,
+        },
     },
-    vpnctrl::platform_specific::common::WgPeerCfg,
+    vpnctrl::platform_specific::common::{PlatformRoute, WgPeerCfg},
 };
 
 use super::types::PeerConfig;
@@ -14,6 +17,7 @@ use crate::api::tokenauth::ApiKey;
 #[post("/interface/<if_id>/peer", format = "json", data = "<peercfg>")]
 pub(crate) async fn create_peer(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ip_store: &State<IpStore>,
     if_id: String,
@@ -69,6 +73,19 @@ pub(crate) async fn create_peer(
         peercfg.autoalloc_v4 = Some(ip_suffix);
     }
 
+    if let Some(endpt) = peercfg.endpoint {
+        let mut rm = rms.route_manager.lock().unwrap();
+        match rm.add_route_bypass(&endpt) {
+            Ok(_) => {}
+            Err(_x) => {
+                return (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, "Failed to bypass peer endpt"),
+                );
+            }
+        }
+    }
+
     // Do some magic
     match iface_state.interface.add_peer(WgPeerCfg {
         pubkey: peercfg.pubkey.clone(),
@@ -96,6 +113,7 @@ pub(crate) async fn create_peer(
 #[get("/interface/<if_id>/peer")]
 pub(crate) async fn get_peers(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     if_id: String,
 ) -> ApiResponseType<Vec<PeerConfig>> {
@@ -166,6 +184,19 @@ pub(crate) async fn delete_peer(
             return (Status::NotFound, ApiResponse::err(-1, "Not found"));
         }
     };
+
+    if let Some(endpt) = peercfg.endpoint {
+        let mut rm = rms.route_manager.lock().unwrap();
+        match rm.remove_route_bypass(&endpt) {
+            Ok(_) => {}
+            Err(_x) => {
+                //return (
+                //    Status::InternalServerError,
+                //    ApiResponse::err(-1, "Failed to bypass peer endpt"),
+                //);
+            }
+        }
+    }
 
     iface_state.peer_cfgs.remove(&pubk);
     match iface_state.interface.remove_peer(&pubk) {
