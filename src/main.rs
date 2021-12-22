@@ -123,6 +123,14 @@ fn svc_install(method: &str, config: &Option<String>) -> Result<(), ()> {
         };
         return Ok(());
     }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::install(config).unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
     #[allow(unreachable_code)]
     {
         panic!("Not supported yet!");
@@ -142,6 +150,14 @@ fn svc_uninstall(method: &str) -> Result<(), ()> {
     {
         match method {
             "winsvc" => svc::winsvc::uninstall().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::uninstall().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
         return Ok(());
@@ -169,6 +185,14 @@ fn svc_start(method: &str) -> Result<(), ()> {
         };
         return Ok(());
     }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::start().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
     #[allow(unreachable_code)]
     {
         panic!("Not supported yet!");
@@ -188,6 +212,14 @@ fn svc_stop(method: &str) -> Result<(), ()> {
     {
         match method {
             "winsvc" => svc::winsvc::stop().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::stop().unwrap(),
             _ => panic!("Not supported feature: {}", method),
         };
         return Ok(());
@@ -223,6 +255,7 @@ fn main() -> Result<(), ()> {
                 Command::new(std::env::current_exe().unwrap())
                     .args(std::env::args().skip(1))
                     .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+                    .env("WG_SUDO", "1")
                     .status()
                     .expect("Failed to re-launch daemon!");
                 return Ok(());
@@ -233,6 +266,7 @@ fn main() -> Result<(), ()> {
             Command::new(std::env::current_exe().unwrap())
                 .args(std::env::args().skip(1))
                 .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+                .env("WG_SUDO", "1")
                 .status()
                 .expect("Failed to re-launch daemon!");
             return Ok(());
