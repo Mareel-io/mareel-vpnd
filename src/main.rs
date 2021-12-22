@@ -169,6 +169,14 @@ fn svc_start(method: &str) -> Result<(), ()> {
         };
         return Ok(());
     }
+    #[cfg(target_os = "macos")]
+    {
+        match method {
+            "launchd" => svc::launchd::start().unwrap(),
+            _ => panic!("Not supported feature: {}", method),
+        };
+        return Ok(());
+    }
     #[allow(unreachable_code)]
     {
         panic!("Not supported yet!");
