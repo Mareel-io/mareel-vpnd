@@ -1,32 +1,31 @@
-use self::common::{PlatformError, PlatformInterface};
+use self::common::{PlatformError, PlatformInterface, PlatformRoute};
 
 // Platform common
 pub(crate) mod common;
 
 #[cfg(target_os = "windows")]
 mod windows;
+#[cfg(target_os = "windows")]
+pub(crate) use windows::*;
 
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(target_os = "macos")]
+pub(crate) use macos::*;
 
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "linux")]
+pub(crate) use linux::*;
 
 pub struct PlatformSpecificFactory;
 
 impl PlatformSpecificFactory {
-    #[cfg(target_os = "windows")]
-    pub fn get_interface(name: &str) -> Result<windows::Interface, PlatformError> {
-        windows::Interface::new(name)
+    pub fn get_interface(name: &str) -> Result<Interface, PlatformError> {
+        Interface::new(name)
     }
 
-    #[cfg(target_os = "macos")]
-    pub fn get_interface(name: &str) -> Result<macos::Interface, PlatformError> {
-        macos::Interface::new(name)
-    }
-
-    #[cfg(target_os = "linux")]
-    pub fn get_interface(name: &str) -> Result<linux::Interface, PlatformError> {
-        linux::Interface::new(name)
+    pub fn get_route(fwmark: u32) -> Result<Route, PlatformError> {
+        Route::new(fwmark)
     }
 }

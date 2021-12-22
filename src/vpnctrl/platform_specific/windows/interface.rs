@@ -62,7 +62,10 @@ impl PlatformInterface for Interface {
         })
     }
 
-    fn set_config(&mut self, cfg: super::super::common::WgIfCfg) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_config(
+        &mut self,
+        cfg: super::super::common::WgIfCfg,
+    ) -> Result<(), Box<dyn VpnctrlError>> {
         self.privkey.copy_from_slice(
             &(match base64::decode(cfg.privkey) {
                 Ok(x) => x,
@@ -246,16 +249,6 @@ impl PlatformInterface for Interface {
             Ok(()) => Ok(()),
             Err(e) => Err(Box::new(InternalError::new(e.to_string()))),
         }
-    }
-
-    fn add_route(&mut self, _ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Ok(()) // wireguard-nt library does some routing stuff, so just ignore it for now...
-    }
-
-    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
     }
 }
 

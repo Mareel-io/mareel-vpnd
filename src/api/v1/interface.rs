@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType};
 use crate::vpnctrl::platform_specific::common::{
-    InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg,
+    InterfaceStatus, PeerTrafficStat, PlatformInterface, PlatformRoute, WgIfCfg,
 };
 use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
@@ -12,6 +12,7 @@ use rocket::{http::Status, serde};
 
 use super::types::{
     IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
+    RouteManagerStore,
 };
 use crate::api::tokenauth::ApiKey;
 
@@ -24,6 +25,7 @@ pub(crate) struct InterfaceStatusResp {
 #[post("/interface", format = "json", data = "<ifcfg>")]
 pub(crate) async fn create_iface(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ifcfg: Json<InterfaceConfig>,
 ) -> ApiResponseType<String> {
@@ -53,6 +55,22 @@ pub(crate) async fn create_iface(
         );
     }
 
+    let mut iface_states = iface_store.iface_states.lock().unwrap();
+
+    if iface_states.keys().len() == 0 {
+        // No keys found. back up the route!
+        let mut rm = rms.route_manager.lock().unwrap();
+        match rm.backup_default_route() {
+            Ok(_) => {}
+            Err(_x) => {
+                return (
+                    Status::InternalServerError,
+                    ApiResponse::err(-1, "Uh-oh. :("),
+                );
+            }
+        }
+    }
+
     // Create interface
     let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
         Ok(mut x) => {
@@ -75,7 +93,7 @@ pub(crate) async fn create_iface(
         }
     };
 
-    iface_store.iface_states.lock().unwrap().insert(
+    iface_states.insert(
         ifcfg.name.clone(),
         Arc::new(Mutex::new(IfaceState {
             interface: iface,
@@ -133,10 +151,21 @@ pub(crate) async fn get_iface(
 #[delete("/interface/<id>")]
 pub(crate) async fn delete_iface(
     _apikey: ApiKey,
+    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> ApiResponseType<String> {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
+    let mut rm = rms.route_manager.lock().unwrap();
+    match rm.restore_default_route() {
+        Ok(_) => {}
+        Err(_x) => {
+            return (
+                Status::InternalServerError,
+                ApiResponse::err(-1, "Uh-oh. :("),
+            );
+        }
+    }
     match ifaces.get(&id) {
         Some(x) => {
             let mut iface = x.lock().unwrap();
@@ -231,13 +260,26 @@ pub(crate) async fn put_ips(
 pub(crate) async fn post_routes(
     _apikey: ApiKey,
     iface_store: &State<InterfaceStore>,
+    rms: &State<RouteManagerStore>,
     id: String,
     route: Json<RouteConfigurationMessage>,
 ) -> ApiResponseType<String> {
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
-            let intf = &mut x.lock().unwrap().interface;
-            match intf.add_route(&route.cidr) {
+            let mut rm = rms.route_manager.lock().unwrap();
+            if route.cidr == "0.0.0.0/0" {
+                match rm.remove_default_route() {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return (
+                            Status::InternalServerError,
+                            ApiResponse::err(-1, &e.to_string()),
+                        )
+                    }
+                }
+            }
+
+            match rm.add_route(&id, &route.cidr) {
                 Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
                 Err(e) => (
                     Status::InternalServerError,

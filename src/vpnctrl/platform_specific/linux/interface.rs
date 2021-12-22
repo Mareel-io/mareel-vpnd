@@ -79,18 +79,9 @@ impl PlatformInterface for Interface {
         update = update.set_fwmark(cfg.fwmark);
 
         match update.apply(&self.ifname, self.backend) {
-            Ok(_) => (),
-            Err(_) => {
-                return Err(Box::new(InternalError::new(
-                    "Failed to update interface".to_string(),
-                )));
-            }
-        };
-
-        match netlink::add_rule(cfg.fwmark, cfg.fwmark, 0x7363) {
             Ok(_) => Ok(()),
             Err(_) => Err(Box::new(InternalError::new(
-                "Failed to set routing rule".to_string(),
+                "Failed to update interface".to_string(),
             ))),
         }
     }
@@ -306,23 +297,6 @@ impl PlatformInterface for Interface {
         }
 
         Ok(())
-    }
-
-    fn add_route(&mut self, cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        let ipn: IpNetwork = match cidr.parse() {
-            Ok(x) => x,
-            Err(_) => return Err(Box::new(BadParameterError::new("bad cidr".to_string()))),
-        };
-        match netlink::add_route(&self.ifname, self.fwmark, ipn) {
-            Ok(_) => Ok(()),
-            Err(_) => Err(Box::new(InternalError::new("Internal error".to_string()))),
-        }
-    }
-
-    fn remove_route(&mut self, ip: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
     }
 }
 
