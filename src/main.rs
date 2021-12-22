@@ -255,6 +255,7 @@ fn main() -> Result<(), ()> {
                 Command::new(std::env::current_exe().unwrap())
                     .args(std::env::args().skip(1))
                     .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+                    .env("WG_SUDO", "1")
                     .status()
                     .expect("Failed to re-launch daemon!");
                 return Ok(());
@@ -265,6 +266,7 @@ fn main() -> Result<(), ()> {
             Command::new(std::env::current_exe().unwrap())
                 .args(std::env::args().skip(1))
                 .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+                .env("WG_SUDO", "1")
                 .status()
                 .expect("Failed to re-launch daemon!");
             return Ok(());
