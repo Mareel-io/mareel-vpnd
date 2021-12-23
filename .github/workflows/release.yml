@@ -58,6 +58,8 @@ jobs:
           path: "./artifacts"
       - name: Merge dirs
         run: for i in ./artifacts/*; do mv "$i"/* ./bin/; rm -rf "$i"; done
+      - name: Add TOML
+        run: cp Cargo.toml ./bin/
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
       - name: Extract Win32 drivers
