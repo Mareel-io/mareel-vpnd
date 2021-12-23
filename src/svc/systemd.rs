@@ -44,7 +44,7 @@ WantedBy=multi-user.target
 
     let mut unit_file = File::create(systemd_unit_path).unwrap();
 
-    unit_file.write(systemd_unit.as_bytes()).unwrap();
+    unit_file.write_all(systemd_unit.as_bytes()).unwrap();
     unit_file.sync_all().unwrap();
     drop(unit_file);
 

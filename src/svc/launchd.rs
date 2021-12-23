@@ -62,7 +62,7 @@ pub fn install(config: &Option<String>) -> Result<(), ()> {
 
     let mut unit_file = File::create(launchd_unit_path).unwrap();
 
-    unit_file.write(launchd_unit.as_bytes()).unwrap();
+    unit_file.write_all(launchd_unit.as_bytes()).unwrap();
     unit_file.sync_all().unwrap();
     drop(unit_file);
 

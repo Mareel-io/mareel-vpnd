@@ -41,7 +41,7 @@ pub(crate) async fn launch(
     };
 
     let cfg = Config {
-        address: IpAddr::from_str(&listen).unwrap(),
+        address: IpAddr::from_str(listen).unwrap(),
         port,
         ..Default::default()
     };
@@ -95,6 +95,9 @@ struct Args {
 
     #[clap(long, value_name = "target")]
     stop: Option<String>,
+
+    #[clap(long, value_name = "target")]
+    restart: Option<String>,
 
     #[clap(long, short = 'c', value_name = "CONFIG")]
     config: Option<String>,
@@ -278,29 +281,43 @@ fn main() -> Result<(), ()> {
         return launcher(None);
     };
 
-    match (&args.install, &args.uninstall, &args.start, &args.stop) {
-        (None, None, None, None) => platform_main(),
-        (Some(method), None, None, None) => svc_install(method.as_str(), &args.config),
-        (None, Some(method), None, None) => svc_uninstall(method.as_str()),
-        (None, None, Some(method), None) => svc_start(method.as_str()),
-        (None, None, None, Some(method)) => svc_stop(method.as_str()),
-        (Some(method), None, Some(method2), None) => {
-            match svc_install(method.as_str(), &args.config) {
-                Ok(_) => {}
-                Err(_) => {}
+    match (
+        &args.install,
+        &args.uninstall,
+        &args.start,
+        &args.stop,
+        &args.restart,
+    ) {
+        (None, None, None, None, None) => platform_main(),
+        (Some(method), None, None, None, None) => svc_install(method.as_str(), &args.config),
+        (None, Some(method), None, None, None) => svc_uninstall(method.as_str()),
+        (None, None, Some(method), None, None) => svc_start(method.as_str()),
+        (None, None, None, Some(method), None) => svc_stop(method.as_str()),
+        (None, None, None, None, Some(method)) => {
+            #[allow(unused_must_use)]
+            {
+                svc_stop(method.as_str());
+            }
+
+            svc_start(method.as_str())
+        }
+        (Some(method), None, Some(method2), None, None) => {
+            #[allow(unused_must_use)]
+            {
+                svc_install(method.as_str(), &args.config);
             }
 
             svc_start(method2.as_str())
         }
-        (None, Some(method2), None, Some(method)) => {
-            match svc_stop(method.as_str()) {
-                Ok(_) => {}
-                Err(_) => {}
+        (None, Some(method2), None, Some(method), None) => {
+            #[allow(unused_must_use)]
+            {
+                svc_stop(method.as_str());
             }
 
             svc_uninstall(method2.as_str())
         }
-        (_, _, _, _) => panic!("Cannot do those things at the same time!"),
+        (_, _, _, _, _) => panic!("Cannot do those things at the same time!"),
     }
 }
 
