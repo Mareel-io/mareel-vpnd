@@ -74,4 +74,5 @@ pub(crate) struct IpStore {
 
 pub(crate) struct RouteManagerStore {
     pub route_manager: Mutex<Box<Route>>,
+    pub route_store: Mutex<HashMap<String, HashMap<String, bool>>>,
 }

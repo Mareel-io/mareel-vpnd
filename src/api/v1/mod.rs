@@ -87,6 +87,8 @@ pub(crate) fn stage() -> AdHoc {
                     interface::put_status,
                     interface::put_ips,
                     interface::post_routes,
+                    interface::get_routes,
+                    interface::delete_routes,
                     interface::get_trafficstat,
                     peer::create_peer,
                     peer::get_peers,
@@ -100,6 +102,7 @@ pub(crate) fn stage() -> AdHoc {
             })
             .manage(RouteManagerStore {
                 route_manager: Mutex::new(route_manager),
+                route_store: Mutex::new(HashMap::new()),
             })
             .manage(IpStore {
                 v4: Mutex::new(HashMap::new()),
