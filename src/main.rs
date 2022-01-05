@@ -249,10 +249,16 @@ fn main() -> Result<(), ()> {
     let cfg = read_config(cfgpath, ARGS.config.is_some());
     let wg_impl = match args.wireguard.clone() {
         Some(x) => x,
-        None => cfg
+        None => {
+            let mut wgpath = std::env::current_exe().unwrap();
+            wgpath.pop();
+            wgpath.push(WG_USERSPACE_IMPL);
+
+            cfg
             .wireguard
             .userspace
-            .unwrap_or_else(|| WG_USERSPACE_IMPL.to_string()),
+            .unwrap_or_else(|| wgpath.to_str().unwrap().to_string())
+        },
     };
 
     fn launch_new(wg_impl: String) -> Result<(), ()> {
