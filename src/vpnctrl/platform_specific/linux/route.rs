@@ -49,12 +49,26 @@ impl PlatformRoute for Route {
 
     fn remove_route(
         &mut self,
-        _ifname: &String,
-        _cidr: &String,
+        ifname: &String,
+        cidr: &String,
     ) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+        let wgc_ifname: InterfaceName = match ifname.parse() {
+            Ok(ifname) => ifname,
+            Err(_) => {
+                return Err(Box::new(PlatformError::new(
+                    "Invalid address format".to_string(),
+                )));
+            }
+        };
+
+        let ipn: IpNetwork = match cidr.parse() {
+            Ok(x) => x,
+            Err(_) => return Err(Box::new(BadParameterError::new("bad cidr".to_string()))),
+        };
+        match netlink::del_route(&wgc_ifname, self.fwmark, ipn) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Box::new(InternalError::new("Internal error".to_string()))),
+        }
     }
 
     fn add_route_bypass(&mut self, _address: &String) -> Result<(), Box<dyn VpnctrlError>> {

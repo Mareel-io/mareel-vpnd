@@ -1,3 +1,5 @@
+// Most of this code came from iy
+
 use ipnetwork::IpNetwork;
 use netlink_packet_core::{
     NetlinkMessage, NetlinkPayload, NLM_F_ACK, NLM_F_CREATE, NLM_F_EXCL, NLM_F_REQUEST,
@@ -208,6 +210,39 @@ pub fn add_route(
     };
 
     match netlink_call(RtnlMessage::NewRoute(message), None) {
+        Ok(_) => Ok(true),
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn del_route(
+    interface: &InterfaceName,
+    table: u32,
+    cidr: IpNetwork,
+) -> Result<bool, io::Error> {
+    let if_index = if_nametoindex(interface)?;
+    let (address_family, dst) = match cidr {
+        IpNetwork::V4(network) => (AF_INET as u8, network.network().octets().to_vec()),
+        IpNetwork::V6(network) => (AF_INET6 as u8, network.network().octets().to_vec()),
+    };
+    let message = RouteMessage {
+        header: RouteHeader {
+            protocol: RTPROT_BOOT,
+            scope: RT_SCOPE_LINK,
+            kind: RTN_UNICAST,
+            destination_prefix_length: cidr.prefix(),
+            address_family,
+            ..Default::default()
+        },
+        nlas: vec![
+            route::Nla::Destination(dst),
+            route::Nla::Oif(if_index),
+            route::Nla::Table(table),
+        ],
+    };
+
+    match netlink_call(RtnlMessage::DelRoute(message), None) {
         Ok(_) => Ok(true),
         Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(false),
         Err(e) => Err(e),

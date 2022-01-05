@@ -2,6 +2,9 @@ use std::net::IpAddr;
 use std::process::Command;
 use std::str::FromStr;
 
+#[cfg(target_family = "unix")]
+use std::os::unix::prelude::CommandExt;
+
 use clap::Parser;
 
 use config::{read_config, WG_USERSPACE_IMPL};
@@ -246,33 +249,42 @@ fn main() -> Result<(), ()> {
     let cfg = read_config(cfgpath, ARGS.config.is_some());
     let wg_impl = match args.wireguard.clone() {
         Some(x) => x,
-        None => cfg
+        None => {
+            let mut wgpath = std::env::current_exe().unwrap();
+            wgpath.pop();
+            wgpath.push(WG_USERSPACE_IMPL);
+
+            cfg
             .wireguard
             .userspace
-            .unwrap_or_else(|| WG_USERSPACE_IMPL.to_string()),
+            .unwrap_or_else(|| wgpath.to_str().unwrap().to_string())
+        },
     };
+
+    fn launch_new(wg_impl: String) -> Result<(), ()> {
+        let mut cmd = Command::new(std::env::current_exe().unwrap());
+        let cmd_cfg = cmd
+            .args(std::env::args().skip(1))
+            .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+            .env("WG_SUDO", "1");
+
+        #[cfg(target_family = "unix")]
+        cmd_cfg.exec();
+        #[cfg(not(target_family = "unix"))]
+        cmd_cfg.status().expect("Failed to re-launch daemon!");
+        return Ok(());
+    }
+
     match std::env::var("WG_USERSPACE_IMPLEMENTATION") {
         Ok(x) => {
             if x != wg_impl {
                 // Re-launch!!
-                Command::new(std::env::current_exe().unwrap())
-                    .args(std::env::args().skip(1))
-                    .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                    .env("WG_SUDO", "1")
-                    .status()
-                    .expect("Failed to re-launch daemon!");
-                return Ok(());
+                return launch_new(wg_impl);
             }
         }
         Err(_) => {
             // Re-launch!
-            Command::new(std::env::current_exe().unwrap())
-                .args(std::env::args().skip(1))
-                .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                .env("WG_SUDO", "1")
-                .status()
-                .expect("Failed to re-launch daemon!");
-            return Ok(());
+            return launch_new(wg_impl);
         }
     }
 

@@ -267,6 +267,29 @@ pub(crate) async fn post_routes(
     match iface_store.iface_states.lock().unwrap().get(&id) {
         Some(x) => {
             let mut rm = rms.route_manager.lock().unwrap();
+            let mut rs = rms.route_store.lock().unwrap();
+            let routemap = match rs.get_mut(&id) {
+                Some(x) => x,
+                None => {
+                    rs.insert(id.clone(), HashMap::new());
+                    rs.get_mut(&id).unwrap()
+                }
+            };
+
+            // Search map before adding CIDR
+            match routemap.get(&route.cidr) {
+                Some(_) => {
+                    return (
+                        Status::Conflict,
+                        ApiResponse::err(-1, "Route conflict. cannot add it"),
+                    )
+                }
+                None => {
+                    routemap.insert(route.cidr.clone(), true);
+                }
+            }
+
+            // Try to put route CIDR to route_store
             if route.cidr == "0.0.0.0/0" {
                 match rm.remove_default_route() {
                     Ok(_) => (),
@@ -288,6 +311,64 @@ pub(crate) async fn post_routes(
             }
         }
         None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
+    }
+}
+
+#[get("/interface/<id>/routes")]
+pub(crate) async fn get_routes(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    rms: &State<RouteManagerStore>,
+    id: String,
+) -> ApiResponseType<Vec<String>> {
+    if let None = iface_store.iface_states.lock().unwrap().get(&id) {
+        return (Status::NotFound, ApiResponse::err(-1, "Not found"));
+    }
+
+    let mut rs = rms.route_store.lock().unwrap();
+    let routemap = match rs.get(&id) {
+        Some(x) => x,
+        None => {
+            rs.insert(id.clone(), HashMap::new());
+            rs.get_mut(&id).unwrap()
+        }
+    };
+
+    let keys: Vec<String> = routemap.keys().map(|x| x.clone()).collect();
+
+    (Status::Ok, ApiResponse::ok(keys))
+}
+
+#[delete("/interface/<id>/routes/<cidr>")]
+pub(crate) async fn delete_routes(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    rms: &State<RouteManagerStore>,
+    id: String,
+    cidr: String,
+) -> ApiResponseType<String> {
+    if let None = iface_store.iface_states.lock().unwrap().get(&id) {
+        return (Status::NotFound, ApiResponse::err(-1, "IFace not found"));
+    }
+
+    let mut rm = rms.route_manager.lock().unwrap();
+    let mut rs = rms.route_store.lock().unwrap();
+    let routemap = match rs.get_mut(&id) {
+        Some(x) => x,
+        None => {
+            return (Status::NotFound, ApiResponse::err(-1, "CIDR not found"));
+        }
+    };
+
+    match routemap.remove(&cidr) {
+        Some(_) => match rm.remove_route(&id, &cidr) {
+            Ok(_) => (Status::Ok, ApiResponse::ok("Ok".to_string())),
+            Err(e) => (
+                Status::InternalServerError,
+                ApiResponse::err(-1, &e.to_string()),
+            ),
+        },
+        None => (Status::NotFound, ApiResponse::err(-1, "CIDR not found")),
     }
 }
 
