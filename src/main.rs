@@ -2,6 +2,9 @@ use std::net::IpAddr;
 use std::process::Command;
 use std::str::FromStr;
 
+#[cfg(target_family = "unix")]
+use std::os::unix::prelude::CommandExt;
+
 use clap::Parser;
 
 use config::{read_config, WG_USERSPACE_IMPL};
@@ -251,28 +254,31 @@ fn main() -> Result<(), ()> {
             .userspace
             .unwrap_or_else(|| WG_USERSPACE_IMPL.to_string()),
     };
+
+    fn launch_new(wg_impl: String) -> Result<(), ()> {
+        let mut cmd = Command::new(std::env::current_exe().unwrap());
+        let cmd_cfg = cmd
+            .args(std::env::args().skip(1))
+            .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+            .env("WG_SUDO", "1");
+
+        #[cfg(target_family = "unix")]
+        cmd_cfg.exec();
+        #[cfg(not(target_family = "unix"))]
+        cmd_cfg.status().expect("Failed to re-launch daemon!");
+        return Ok(());
+    }
+
     match std::env::var("WG_USERSPACE_IMPLEMENTATION") {
         Ok(x) => {
             if x != wg_impl {
                 // Re-launch!!
-                Command::new(std::env::current_exe().unwrap())
-                    .args(std::env::args().skip(1))
-                    .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                    .env("WG_SUDO", "1")
-                    .status()
-                    .expect("Failed to re-launch daemon!");
-                return Ok(());
+                return launch_new(wg_impl);
             }
         }
         Err(_) => {
             // Re-launch!
-            Command::new(std::env::current_exe().unwrap())
-                .args(std::env::args().skip(1))
-                .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
-                .env("WG_SUDO", "1")
-                .status()
-                .expect("Failed to re-launch daemon!");
-            return Ok(());
+            return launch_new(wg_impl);
         }
     }
 
