@@ -6,6 +6,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{serde, Shutdown, State};
 
+use crate::api::tokenauth::ApiKey;
 use crate::vpnctrl::platform_specific::common::PlatformRoute;
 use crate::vpnctrl::platform_specific::{PlatformSpecificFactory, Route};
 
@@ -21,6 +22,7 @@ mod types;
 
 #[post("/shutdown", format = "json", data = "<magic>")]
 async fn shutdown_daemon(
+    _apikey: ApiKey,
     shutdown: Shutdown,
     iface_store: &State<InterfaceStore>,
     magic: Json<DaemonControlMessage>,
