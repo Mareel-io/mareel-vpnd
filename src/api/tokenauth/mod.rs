@@ -43,7 +43,7 @@ impl<'r> FromRequest<'r> for ApiKey {
 
         let keys: Vec<&str> = req.headers().get("Authorization").collect();
         match keys.len() {
-            1 => match key == keys[0] {
+            1 => match (key == keys[0]) || (format!("Bearer {}", key) == keys[0]) {
                 true => Outcome::Success(Self),
                 false => Outcome::Failure((Status::Unauthorized, ())),
             },
