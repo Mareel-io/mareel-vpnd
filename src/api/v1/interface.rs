@@ -158,6 +158,7 @@ pub(crate) async fn delete_iface(
 ) -> ApiResponseType<String> {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
     let mut rm = rms.route_manager.lock().unwrap();
+    let mut rs = rms.route_store.lock().unwrap();
     let reg = prom_store.registry.lock().unwrap();
     match rm.restore_default_route() {
         Ok(_) => {}
@@ -168,6 +169,12 @@ pub(crate) async fn delete_iface(
             );
         }
     }
+
+    // Remove all route owned by the interface
+    if let Some(_) = rs.get(&id) {
+        rs.remove(&id);
+    }
+
     match ifaces.get(&id) {
         Some(x) => {
             let mut iface = x.lock().unwrap();
