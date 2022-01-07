@@ -74,16 +74,13 @@ async fn prometheus(
 ) -> (Status, String) {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
 
-    // Update 
+    // Update
 
     for iface in ifaces.values() {
         let ifacestat = iface.lock().unwrap();
         let trafficstat = match ifacestat.interface.get_trafficstats() {
             Ok(x) => x,
-            Err(e) => return (
-                Status::InternalServerError,
-                e.to_string(),
-            ),
+            Err(e) => return (Status::InternalServerError, e.to_string()),
         };
 
         // Move to HashMap
@@ -91,7 +88,7 @@ async fn prometheus(
         for stat in trafficstat.iter() {
             hm.insert(stat.pubkey.clone(), (stat.tx_bytes, stat.rx_bytes));
         }
-        
+
         for (peer, tx_cnt, rx_cnt) in ifacestat.peer_cfgs.values() {
             if let Some((tx_bytes, rx_bytes)) = hm.get(&peer.pubkey) {
                 if (*tx_bytes as f64 - tx_cnt.get()) > 0.0 {
