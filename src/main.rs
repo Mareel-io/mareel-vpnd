@@ -1,6 +1,7 @@
 use std::net::IpAddr;
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
 #[cfg(target_family = "unix")]
 use std::os::unix::prelude::CommandExt;
@@ -14,6 +15,8 @@ use rocket::tokio::sync::mpsc::Receiver;
 
 use rocket::tokio::runtime::Runtime;
 
+use prometheus::Registry;
+
 #[macro_use]
 extern crate rocket;
 #[macro_use]
@@ -26,6 +29,7 @@ mod vpnctrl;
 
 lazy_static! {
     static ref ARGS: Args = Args::parse();
+    static ref PROM_REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
 }
 
 //#[launch]
@@ -49,9 +53,14 @@ pub(crate) async fn launch(
         ..Default::default()
     };
 
+    // Launch monitoring thread for the daemon
+
     rocket::custom(cfg)
         // TODO: FIXME
-        .attach(api::stage(&daemon_cfg.api.apikey))
+        .attach(api::stage(
+            &daemon_cfg.api.apikey,
+            Arc::clone(&PROM_REGISTRY),
+        ))
         .attach(AdHoc::on_liftoff("Shutdown", move |rocket| {
             Box::pin(async move {
                 let shutdown = rocket.shutdown();
@@ -254,11 +263,10 @@ fn main() -> Result<(), ()> {
             wgpath.pop();
             wgpath.push(WG_USERSPACE_IMPL);
 
-            cfg
-            .wireguard
-            .userspace
-            .unwrap_or_else(|| wgpath.to_str().unwrap().to_string())
-        },
+            cfg.wireguard
+                .userspace
+                .unwrap_or_else(|| wgpath.to_str().unwrap().to_string())
+        }
     };
 
     fn launch_new(wg_impl: String) -> Result<(), ()> {

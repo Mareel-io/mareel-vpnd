@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+use ::prometheus::{Encoder, TextEncoder};
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -12,7 +13,7 @@ use crate::vpnctrl::platform_specific::{PlatformSpecificFactory, Route};
 
 use self::types::{IpStore, RouteManagerStore};
 
-use super::common::{ApiResponse, ApiResponseType};
+use super::common::{ApiResponse, ApiResponseType, PrometheusStore};
 
 use types::{DaemonControlMessage, InterfaceStore};
 
@@ -65,6 +66,62 @@ async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
     )
 }
 
+#[get("/prometheus")]
+async fn prometheus(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    prom_store: &State<PrometheusStore>,
+) -> (Status, String) {
+    let mut ifaces = iface_store.iface_states.lock().unwrap();
+
+    // Update 
+
+    for iface in ifaces.values() {
+        let ifacestat = iface.lock().unwrap();
+        let trafficstat = match ifacestat.interface.get_trafficstats() {
+            Ok(x) => x,
+            Err(e) => return (
+                Status::InternalServerError,
+                e.to_string(),
+            ),
+        };
+
+        // Move to HashMap
+        let mut hm: HashMap<String, (u64, u64)> = HashMap::new();
+        for stat in trafficstat.iter() {
+            hm.insert(stat.pubkey.clone(), (stat.tx_bytes, stat.rx_bytes));
+        }
+        
+        for (peer, tx_cnt, rx_cnt) in ifacestat.peer_cfgs.values() {
+            if let Some((tx_bytes, rx_bytes)) = hm.get(&peer.pubkey) {
+                if (*tx_bytes as f64 - tx_cnt.get()) > 0.0 {
+                    tx_cnt.inc_by(*tx_bytes as f64 - tx_cnt.get());
+                } else {
+                    tx_cnt.reset();
+                    tx_cnt.inc_by(*tx_bytes as f64);
+                }
+
+                if (*rx_bytes as f64 - rx_cnt.get()) > 0.0 {
+                    rx_cnt.inc_by(*rx_bytes as f64 - rx_cnt.get());
+                } else {
+                    rx_cnt.reset();
+                    rx_cnt.inc_by(*rx_bytes as f64);
+                }
+            }
+        }
+    }
+
+    let reg = prom_store.registry.lock().unwrap();
+    let mut buffer = Vec::<u8>::new();
+    let encoder = TextEncoder::new();
+    let metric_families = reg.gather();
+
+    drop(reg);
+
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+    (Status::Ok, String::from_utf8(buffer).unwrap())
+}
+
 pub(crate) fn stage() -> AdHoc {
     AdHoc::on_ignite("API v1", |rocket| async {
         let mut route_manager = Box::new(PlatformSpecificFactory::get_route(0x7370616b).unwrap());
@@ -97,6 +154,7 @@ pub(crate) fn stage() -> AdHoc {
                     peer::get_peer,
                     //peer::update_peer,
                     peer::delete_peer,
+                    prometheus,
                 ],
             )
             .manage(InterfaceStore {
