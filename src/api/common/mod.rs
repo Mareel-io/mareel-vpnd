@@ -1,3 +1,6 @@
+use std::sync::{Arc, Mutex};
+
+use prometheus::Registry;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
@@ -32,6 +35,10 @@ impl<T> ApiResponse<T> {
             code,
         }))
     }
+}
+
+pub(crate) struct PrometheusStore {
+    pub(crate) registry: Arc<Mutex<Registry>>,
 }
 
 pub(crate) type ApiResponseType<T> = (Status, Result<Json<ApiResponse<T>>, Json<ApiError>>);

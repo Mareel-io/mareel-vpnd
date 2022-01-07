@@ -1,9 +1,10 @@
+use prometheus::{Counter, Opts};
 use regex::Regex;
 use rocket::{http::Status, serde::json::Json, State};
 
 use crate::{
     api::{
-        common::{ApiResponse, ApiResponseType},
+        common::{ApiResponse, ApiResponseType, PrometheusStore},
         v1::{
             types::{IpStore, RouteManagerStore},
             InterfaceStore,
@@ -21,6 +22,7 @@ pub(crate) async fn create_peer(
     rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ip_store: &State<IpStore>,
+    prom_store: &State<PrometheusStore>,
     if_id: String,
     mut peercfg: Json<PeerConfig>,
 ) -> ApiResponseType<PeerConfig> {
@@ -89,6 +91,13 @@ pub(crate) async fn create_peer(
         }
     }
 
+    let peer_tx_opts = Opts::new("peer_tx", "Peer TX bytes")
+        .const_label("interface", if_id.clone())
+        .const_label("pubk", peercfg.pubkey.clone());
+    let peer_rx_opts = Opts::new("peer_rx", "Peer RX bytes")
+        .const_label("interface", if_id.clone())
+        .const_label("pubk", peercfg.pubkey.clone());
+
     // Do some magic
     match iface_state.interface.add_peer(WgPeerCfg {
         pubkey: peercfg.pubkey.clone(),
@@ -105,10 +114,18 @@ pub(crate) async fn create_peer(
             )
         }
     }
+    let tx_counter = Counter::with_opts(peer_tx_opts).unwrap();
+    let rx_counter = Counter::with_opts(peer_rx_opts).unwrap();
 
-    iface_state
-        .peer_cfgs
-        .insert(peercfg.pubkey.clone(), peercfg.clone());
+    let reg = prom_store.registry.lock().unwrap();
+    reg.register(Box::new(tx_counter.clone())).unwrap();
+    reg.register(Box::new(rx_counter.clone())).unwrap();
+    drop(reg);
+
+    iface_state.peer_cfgs.insert(
+        peercfg.pubkey.clone(),
+        (peercfg.clone(), tx_counter, rx_counter),
+    );
 
     (Status::Ok, ApiResponse::ok(peercfg.into_inner()))
 }
@@ -128,7 +145,11 @@ pub(crate) async fn get_peers(
     .lock()
     .unwrap();
 
-    let peers: Vec<PeerConfig> = iface_state.peer_cfgs.values().cloned().collect();
+    let peers: Vec<PeerConfig> = iface_state
+        .peer_cfgs
+        .values()
+        .map(|x| x.0.clone())
+        .collect();
 
     (Status::Ok, ApiResponse::ok(peers))
 }
@@ -149,7 +170,7 @@ pub(crate) async fn get_peer(
     .unwrap();
 
     match iface_state.peer_cfgs.get(&pubk) {
-        Some(x) => (Status::Ok, ApiResponse::ok(x.clone())),
+        Some(x) => (Status::Ok, ApiResponse::ok(x.0.clone())),
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
@@ -171,6 +192,7 @@ pub(crate) async fn delete_peer(
     rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ip_store: &State<IpStore>,
+    prom_store: &State<PrometheusStore>,
     if_id: String,
     pubk: String,
 ) -> ApiResponseType<String> {
@@ -182,7 +204,7 @@ pub(crate) async fn delete_peer(
     .lock()
     .unwrap();
 
-    let peercfg = match iface_state.peer_cfgs.get(&pubk) {
+    let (peercfg, tx_counter, rx_counter) = match iface_state.peer_cfgs.get(&pubk) {
         Some(x) => x.clone(),
         None => {
             return (Status::NotFound, ApiResponse::err(-1, "Not found"));
@@ -201,6 +223,13 @@ pub(crate) async fn delete_peer(
         //    }
         //}
     }
+
+    let reg = prom_store.registry.lock().unwrap();
+    #[allow(unused_must_use)]
+    reg.unregister(Box::new(tx_counter.clone()));
+    #[allow(unused_must_use)]
+    reg.unregister(Box::new(rx_counter.clone()));
+    drop(reg);
 
     iface_state.peer_cfgs.remove(&pubk);
     match iface_state.interface.remove_peer(&pubk) {

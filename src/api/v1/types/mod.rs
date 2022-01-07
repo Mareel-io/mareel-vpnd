@@ -3,6 +3,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use prometheus::Counter;
+
 use crate::vpnctrl::platform_specific::common::{PlatformInterface, PlatformRoute};
 use crate::vpnctrl::platform_specific::{Interface, Route};
 
@@ -40,7 +42,7 @@ pub(crate) struct PeerConfig {
 pub(crate) struct IfaceState {
     pub interface: Box<dyn PlatformInterface + Send>,
     pub iface_cfg: InterfaceConfig,
-    pub peer_cfgs: HashMap<String, PeerConfig>,
+    pub peer_cfgs: HashMap<String, (PeerConfig, Counter, Counter)>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::api::common::{ApiResponse, ApiResponseType};
+use crate::api::common::{ApiResponse, ApiResponseType, PrometheusStore};
 use crate::vpnctrl::platform_specific::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, PlatformRoute, WgIfCfg,
 };
@@ -153,10 +153,12 @@ pub(crate) async fn delete_iface(
     _apikey: ApiKey,
     rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
+    prom_store: &State<PrometheusStore>,
     id: String,
 ) -> ApiResponseType<String> {
     let mut ifaces = iface_store.iface_states.lock().unwrap();
     let mut rm = rms.route_manager.lock().unwrap();
+    let reg = prom_store.registry.lock().unwrap();
     match rm.restore_default_route() {
         Ok(_) => {}
         Err(_x) => {
@@ -170,6 +172,10 @@ pub(crate) async fn delete_iface(
         Some(x) => {
             let mut iface = x.lock().unwrap();
             iface.interface.down();
+            for (_, tx_cnt, rx_cnt) in iface.peer_cfgs.values() {
+                reg.unregister(Box::new(tx_cnt.clone())).unwrap();
+                reg.unregister(Box::new(rx_cnt.clone())).unwrap();
+            }
             drop(iface);
             ifaces.remove(&id);
             (Status::Ok, ApiResponse::ok("Ok".to_string()))
