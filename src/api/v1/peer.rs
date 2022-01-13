@@ -26,6 +26,18 @@ pub(crate) async fn create_peer(
     if_id: String,
     mut peercfg: Json<PeerConfig>,
 ) -> ApiResponseType<PeerConfig> {
+    // Check allowed_ips is CIDR or not
+
+    let cidr_re = Regex::new(r"([0-9a-fA-F:.]+/[0-9]+)").unwrap();
+    for allowed_ip in peercfg.allowed_ips.iter() {
+        if (!cidr_re.is_match(allowed_ip)) {
+            return (
+                Status::UnprocessableEntity,
+                ApiResponse::err(-1, "allowed_ips contains non-CIDR formatted entry"),
+            );
+        }
+    }
+
     let iface_states = iface_store.iface_states.lock().unwrap();
     let mut iface_state = match iface_states.get(&if_id) {
         Some(x) => x,
