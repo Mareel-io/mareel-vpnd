@@ -6,7 +6,7 @@ use std::{
 use dashmap::{DashMap, DashSet};
 use prometheus::Counter;
 
-use crate::vpnctrl::platform_specific::common::{PlatformInterface};
+use crate::vpnctrl::platform_specific::common::PlatformInterface;
 use crate::vpnctrl::platform_specific::Route;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
