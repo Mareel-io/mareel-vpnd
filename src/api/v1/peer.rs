@@ -30,7 +30,7 @@ pub(crate) async fn create_peer(
 
     let cidr_re = Regex::new(r"([0-9a-fA-F:.]+/[0-9]+)").unwrap();
     for allowed_ip in peercfg.allowed_ips.iter() {
-        if (!cidr_re.is_match(allowed_ip)) {
+        if !cidr_re.is_match(allowed_ip) {
             return (
                 Status::UnprocessableEntity,
                 ApiResponse::err(-1, "allowed_ips contains non-CIDR formatted entry"),
@@ -38,21 +38,21 @@ pub(crate) async fn create_peer(
         }
     }
 
-    let iface_states = iface_store.iface_states.lock().unwrap();
-    let mut iface_state = match iface_states.get(&if_id) {
+    let iface_states = &iface_store.iface_states;
+    let iface_state_lock = match iface_states.get(&if_id) {
         Some(x) => x,
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
-    }
-    .lock()
-    .unwrap();
+    };
+
+    let mut iface_state = iface_state_lock.lock().unwrap();
 
     if iface_state.peer_cfgs.get(&peercfg.pubkey).is_some() {
         return (Status::Conflict, ApiResponse::err(-1, "Conflict"));
     };
 
     if Some(true) == peercfg.autoalloc {
-        let mut v4store = ip_store.v4.lock().unwrap();
-        let mut v4_last_count = ip_store.v4_last_count.lock().unwrap();
+        let v4store = &ip_store.v4;
+        let mut v4_last_count = ip_store.v4_last_count.write().unwrap();
 
         let mut ip_suffix: u32 = 0;
         for _i in 1..0x1000000 {
@@ -64,7 +64,7 @@ pub(crate) async fn create_peer(
 
             // Check existance
             if v4store.get(&*v4_last_count).is_none() {
-                v4store.insert(*v4_last_count, true);
+                v4store.insert(*v4_last_count);
                 ip_suffix = *v4_last_count;
                 break;
             }
@@ -149,11 +149,13 @@ pub(crate) async fn get_peers(
     iface_store: &State<InterfaceStore>,
     if_id: String,
 ) -> ApiResponseType<Vec<PeerConfig>> {
-    let iface_states = iface_store.iface_states.lock().unwrap();
-    let iface_state = match iface_states.get(&if_id) {
+    let iface_states = &iface_store.iface_states;
+    let iface_state_lock = match iface_states.get(&if_id) {
         Some(x) => x,
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
-    }
+    };
+
+    let iface_state = iface_state_lock
     .lock()
     .unwrap();
 
@@ -173,11 +175,13 @@ pub(crate) async fn get_peer(
     if_id: String,
     pubk: String,
 ) -> ApiResponseType<PeerConfig> {
-    let iface_states = iface_store.iface_states.lock().unwrap();
-    let iface_state = match iface_states.get(&if_id) {
+    let iface_states = &iface_store.iface_states;
+    let iface_state_lock = match iface_states.get(&if_id) {
         Some(x) => x,
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
-    }
+    };
+
+    let iface_state = iface_state_lock
     .lock()
     .unwrap();
 
@@ -208,13 +212,12 @@ pub(crate) async fn delete_peer(
     if_id: String,
     pubk: String,
 ) -> ApiResponseType<String> {
-    let iface_states = iface_store.iface_states.lock().unwrap();
-    let mut iface_state = match iface_states.get(&if_id) {
+    let iface_states = &iface_store.iface_states;
+    let iface_state_lock = match iface_states.get(&if_id) {
         Some(x) => x,
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
-    }
-    .lock()
-    .unwrap();
+    };
+    let mut iface_state = iface_state_lock.lock().unwrap();
 
     let (peercfg, tx_counter, rx_counter) = match iface_state.peer_cfgs.get(&pubk) {
         Some(x) => x.clone(),
@@ -247,11 +250,11 @@ pub(crate) async fn delete_peer(
     match iface_state.interface.remove_peer(&pubk) {
         Ok(_) => {
             if let Some(x) = peercfg.autoalloc_v4 {
-                let mut v4store = ip_store.v4.lock().unwrap();
+                let v4store = &ip_store.v4;
                 v4store.remove(&x);
             }
             if let Some(x) = peercfg.autoalloc_v6 {
-                let mut v4store = ip_store.v6.lock().unwrap();
+                let v4store = &ip_store.v6;
                 v4store.remove(&x);
             }
         }
