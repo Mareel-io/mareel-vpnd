@@ -51,7 +51,7 @@ pub(crate) async fn create_iface(
 
     let iface_states = &iface_store.iface_states;
 
-    if iface_states.len() == 0 {
+    if iface_states.is_empty() {
         // No keys found. back up the route!
         let mut rm = rms.route_manager.lock().unwrap();
         match rm.backup_default_route() {
@@ -269,7 +269,7 @@ pub(crate) async fn post_routes(
     route: Json<RouteConfigurationMessage>,
 ) -> ApiResponseType<String> {
     match iface_store.iface_states.get(&id) {
-        Some(x) => {
+        Some(_) => {
             let mut rm = rms.route_manager.lock().unwrap();
             let rs = &rms.route_store;
             let mut routemap = match rs.get_mut(&id) {
@@ -325,7 +325,7 @@ pub(crate) async fn get_routes(
     rms: &State<RouteManagerStore>,
     id: String,
 ) -> ApiResponseType<Vec<String>> {
-    if let None = iface_store.iface_states.get(&id) {
+    if iface_store.iface_states.get(&id).is_none() {
         return (Status::NotFound, ApiResponse::err(-1, "Not found"));
     }
 
@@ -338,7 +338,7 @@ pub(crate) async fn get_routes(
         }
     };
 
-    let keys: Vec<String> = routemap.keys().map(|x| x.clone()).collect();
+    let keys: Vec<String> = routemap.keys().cloned().collect();
 
     (Status::Ok, ApiResponse::ok(keys))
 }
@@ -351,7 +351,7 @@ pub(crate) async fn delete_routes(
     id: String,
     cidr: String,
 ) -> ApiResponseType<String> {
-    if let None = iface_store.iface_states.get(&id) {
+    if iface_store.iface_states.get(&id).is_none() {
         return (Status::NotFound, ApiResponse::err(-1, "IFace not found"));
     }
 

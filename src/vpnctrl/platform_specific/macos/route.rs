@@ -27,7 +27,7 @@ impl PlatformRoute for Route {
         Ok(())
     }
 
-    fn add_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), Box<dyn VpnctrlError>> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
             Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
@@ -51,8 +51,8 @@ impl PlatformRoute for Route {
 
     fn remove_route(
         &mut self,
-        ifname: &String,
-        cidr: &String,
+        ifname: &str,
+        cidr: &str,
     ) -> Result<(), Box<dyn VpnctrlError>> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
@@ -75,7 +75,7 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn add_route_bypass(&mut self, address: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route_bypass(&mut self, address: &str) -> Result<(), Box<dyn VpnctrlError>> {
         // TODO: Support IPv6!
         match Command::new("route")
             .arg("-q")
@@ -162,7 +162,7 @@ impl PlatformRoute for Route {
 }
 
 impl Route {
-    fn get_real_ifname(alias: &String) -> Result<String, PlatformError> {
+    fn get_real_ifname(alias: &str) -> Result<String, PlatformError> {
         let lib_ifname: InterfaceName = match alias.parse() {
             Ok(ifname) => ifname,
             Err(_) => {

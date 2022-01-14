@@ -90,7 +90,7 @@ pub(crate) async fn create_peer(
     if let Some(endpt) = &peercfg.endpoint {
         let mut rm = rms.route_manager.lock().unwrap();
         let re = Regex::new(r":.*").unwrap();
-        let ip = re.replace_all(&endpt, "");
+        let ip = re.replace_all(endpt, "");
         match rm.add_route_bypass(&(*ip).to_string()) {
             Ok(_) => {}
             Err(_x) => {
@@ -144,7 +144,6 @@ pub(crate) async fn create_peer(
 #[get("/interface/<if_id>/peer")]
 pub(crate) async fn get_peers(
     _apikey: ApiKey,
-    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     if_id: String,
 ) -> ApiResponseType<Vec<PeerConfig>> {
@@ -182,7 +181,7 @@ pub(crate) async fn get_peer(
 
     match iface_state.peer_cfgs.get(&pubk) {
         Some(x) => (Status::Ok, ApiResponse::ok(x.0.clone())),
-        None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
+        None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
     }
 }
 
@@ -200,7 +199,6 @@ pub(crate) async fn get_peer(
 #[delete("/interface/<if_id>/peer/<pubk>")]
 pub(crate) async fn delete_peer(
     _apikey: ApiKey,
-    rms: &State<RouteManagerStore>,
     iface_store: &State<InterfaceStore>,
     ip_store: &State<IpStore>,
     prom_store: &State<PrometheusStore>,
@@ -221,7 +219,7 @@ pub(crate) async fn delete_peer(
         }
     };
 
-    if let Some(endpt) = &peercfg.endpoint {
+    if let Some(_endpt) = &peercfg.endpoint {
         //let mut rm = rms.route_manager.lock().unwrap();
         //match rm.delete_route_bypass(&endpt) {
         //    Ok(_) => {}
@@ -236,9 +234,9 @@ pub(crate) async fn delete_peer(
 
     let reg = prom_store.registry.lock().unwrap();
     #[allow(unused_must_use)]
-    reg.unregister(Box::new(tx_counter.clone()));
+    reg.unregister(Box::new(tx_counter));
     #[allow(unused_must_use)]
-    reg.unregister(Box::new(rx_counter.clone()));
+    reg.unregister(Box::new(rx_counter));
     drop(reg);
 
     iface_state.peer_cfgs.remove(&pubk);
