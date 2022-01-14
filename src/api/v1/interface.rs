@@ -44,8 +44,6 @@ pub(crate) async fn create_iface(
 
     if iface_store
         .iface_states
-        .lock()
-        .unwrap()
         .get(&ifcfg.name)
         .is_some()
     {
@@ -55,9 +53,9 @@ pub(crate) async fn create_iface(
         );
     }
 
-    let mut iface_states = iface_store.iface_states.lock().unwrap();
+    let iface_states = &iface_store.iface_states;
 
-    if iface_states.keys().len() == 0 {
+    if iface_states.len() == 0 {
         // No keys found. back up the route!
         let mut rm = rms.route_manager.lock().unwrap();
         match rm.backup_default_route() {
@@ -115,9 +113,7 @@ pub(crate) async fn get_ifaces(
         ApiResponse::ok(
             iface_store
                 .iface_states
-                .lock()
-                .unwrap()
-                .values()
+                .iter()
                 .map(|x| x.lock().unwrap().iface_cfg.clone())
                 .collect(),
         ),
@@ -130,7 +126,7 @@ pub(crate) async fn get_iface(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> ApiResponseType<InterfaceConfig> {
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => (
             Status::Ok,
             ApiResponse::ok(x.lock().unwrap().iface_cfg.clone()),
@@ -156,9 +152,9 @@ pub(crate) async fn delete_iface(
     prom_store: &State<PrometheusStore>,
     id: String,
 ) -> ApiResponseType<String> {
-    let mut ifaces = iface_store.iface_states.lock().unwrap();
+    let ifaces = &iface_store.iface_states;
     let mut rm = rms.route_manager.lock().unwrap();
-    let mut rs = rms.route_store.lock().unwrap();
+    let rs = &rms.route_store;
     let reg = prom_store.registry.lock().unwrap();
     match rm.restore_default_route() {
         Ok(_) => {}
@@ -198,7 +194,7 @@ pub(crate) async fn get_status(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> ApiResponseType<InterfaceStatusResp> {
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => (
             Status::Ok,
             ApiResponse::ok(InterfaceStatusResp {
@@ -222,7 +218,7 @@ pub(crate) async fn put_status(
         _ => return (Status::BadRequest, ApiResponse::err(-1, "Bad Request")),
     };
 
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             let cur_stat = intf.get_status();
@@ -254,7 +250,7 @@ pub(crate) async fn put_ips(
     id: String,
     ips: Json<IpConfigurationMessage>,
 ) -> ApiResponseType<String> {
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             match intf.set_ip(&ips.ipaddr) {
@@ -277,11 +273,11 @@ pub(crate) async fn post_routes(
     id: String,
     route: Json<RouteConfigurationMessage>,
 ) -> ApiResponseType<String> {
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => {
             let mut rm = rms.route_manager.lock().unwrap();
-            let mut rs = rms.route_store.lock().unwrap();
-            let routemap = match rs.get_mut(&id) {
+            let rs = &rms.route_store;
+            let mut routemap = match rs.get_mut(&id) {
                 Some(x) => x,
                 None => {
                     rs.insert(id.clone(), HashMap::new());
@@ -334,16 +330,16 @@ pub(crate) async fn get_routes(
     rms: &State<RouteManagerStore>,
     id: String,
 ) -> ApiResponseType<Vec<String>> {
-    if let None = iface_store.iface_states.lock().unwrap().get(&id) {
+    if let None = iface_store.iface_states.get(&id) {
         return (Status::NotFound, ApiResponse::err(-1, "Not found"));
     }
 
-    let mut rs = rms.route_store.lock().unwrap();
+    let rs = &rms.route_store;
     let routemap = match rs.get(&id) {
         Some(x) => x,
         None => {
             rs.insert(id.clone(), HashMap::new());
-            rs.get_mut(&id).unwrap()
+            rs.get(&id).unwrap()
         }
     };
 
@@ -360,13 +356,13 @@ pub(crate) async fn delete_routes(
     id: String,
     cidr: String,
 ) -> ApiResponseType<String> {
-    if let None = iface_store.iface_states.lock().unwrap().get(&id) {
+    if let None = iface_store.iface_states.get(&id) {
         return (Status::NotFound, ApiResponse::err(-1, "IFace not found"));
     }
 
     let mut rm = rms.route_manager.lock().unwrap();
-    let mut rs = rms.route_store.lock().unwrap();
-    let routemap = match rs.get_mut(&id) {
+    let rs = &rms.route_store;
+    let mut routemap = match rs.get_mut(&id) {
         Some(x) => x,
         None => {
             return (Status::NotFound, ApiResponse::err(-1, "CIDR not found"));
@@ -391,7 +387,7 @@ pub(crate) async fn get_trafficstat(
     iface_store: &State<InterfaceStore>,
     id: String,
 ) -> ApiResponseType<Vec<PeerTrafficStat>> {
-    match iface_store.iface_states.lock().unwrap().get(&id) {
+    match iface_store.iface_states.get(&id) {
         Some(x) => {
             let intf = &mut x.lock().unwrap().interface;
             match intf.get_trafficstats() {
