@@ -42,11 +42,7 @@ pub(crate) async fn create_iface(
         }
     };
 
-    if iface_store
-        .iface_states
-        .get(&ifcfg.name)
-        .is_some()
-    {
+    if iface_store.iface_states.get(&ifcfg.name).is_some() {
         return (
             Status::Conflict,
             ApiResponse::err(-1, "Cannot create interface with same name"),
@@ -70,7 +66,7 @@ pub(crate) async fn create_iface(
     }
 
     // Create interface
-    let iface = match async {PlatformSpecificFactory::get_interface(&ifcfg.name)}.await {
+    let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
         Ok(mut x) => {
             match x.set_config(WgIfCfg {
                 listen_port: ifcfg.listen_port,

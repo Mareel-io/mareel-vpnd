@@ -27,7 +27,6 @@ pub(crate) async fn create_peer(
     mut peercfg: Json<PeerConfig>,
 ) -> ApiResponseType<PeerConfig> {
     // Check allowed_ips is CIDR or not
-
     let cidr_re = Regex::new(r"([0-9a-fA-F:.]+/[0-9]+)").unwrap();
     for allowed_ip in peercfg.allowed_ips.iter() {
         if !cidr_re.is_match(allowed_ip) {
@@ -155,9 +154,7 @@ pub(crate) async fn get_peers(
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
     };
 
-    let iface_state = iface_state_lock
-    .lock()
-    .unwrap();
+    let iface_state = iface_state_lock.lock().unwrap();
 
     let peers: Vec<PeerConfig> = iface_state
         .peer_cfgs
@@ -181,9 +178,7 @@ pub(crate) async fn get_peer(
         None => return (Status::NotFound, ApiResponse::err(-1, "Not found")),
     };
 
-    let iface_state = iface_state_lock
-    .lock()
-    .unwrap();
+    let iface_state = iface_state_lock.lock().unwrap();
 
     match iface_state.peer_cfgs.get(&pubk) {
         Some(x) => (Status::Ok, ApiResponse::ok(x.0.clone())),

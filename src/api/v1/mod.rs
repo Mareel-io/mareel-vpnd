@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock};
 
-use dashmap::{DashMap, DashSet};
 use ::prometheus::{Encoder, TextEncoder};
+use dashmap::{DashMap, DashSet};
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -10,7 +10,7 @@ use rocket::{serde, Shutdown, State};
 
 use crate::api::tokenauth::ApiKey;
 use crate::vpnctrl::platform_specific::common::PlatformRoute;
-use crate::vpnctrl::platform_specific::{PlatformSpecificFactory};
+use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 
 use self::types::{IpStore, RouteManagerStore};
 
