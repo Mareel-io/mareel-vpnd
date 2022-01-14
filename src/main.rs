@@ -280,7 +280,7 @@ fn main() -> Result<(), ()> {
         cmd_cfg.exec();
         #[cfg(not(target_family = "unix"))]
         cmd_cfg.status().expect("Failed to re-launch daemon!");
-        return Ok(());
+        Ok(())
     }
 
     match std::env::var("WG_USERSPACE_IMPLEMENTATION") {

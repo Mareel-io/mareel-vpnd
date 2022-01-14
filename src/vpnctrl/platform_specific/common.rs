@@ -67,8 +67,8 @@ pub trait PlatformInterface {
     fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>>;
     fn get_peers(&self) -> Result<Vec<WgPeerCfg>, Box<dyn VpnctrlError>>;
-    fn get_peer(&self, pubkey: &String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
-    fn remove_peer(&mut self, pubkey: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
+    fn remove_peer(&mut self, pubkey: &str) -> Result<(), Box<dyn VpnctrlError>>;
     fn get_status(&self) -> InterfaceStatus;
     fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>>;
     fn up(&mut self) -> bool;
@@ -81,10 +81,10 @@ pub trait PlatformRoute {
     where
         Self: Sized;
     fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>>;
-    fn remove_route(&mut self, ifname: &String, cidr: &String)
+    fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), Box<dyn VpnctrlError>>;
+    fn remove_route(&mut self, ifname: &str, cidr: &str)
         -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_route_bypass(&mut self, address: &String) -> Result<(), Box<dyn VpnctrlError>>;
+    fn add_route_bypass(&mut self, address: &str) -> Result<(), Box<dyn VpnctrlError>>;
     fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
     fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
     fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
