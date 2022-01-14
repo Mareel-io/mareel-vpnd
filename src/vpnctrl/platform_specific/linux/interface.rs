@@ -97,7 +97,7 @@ impl PlatformInterface for Interface {
         };
 
         let psk = match peer.psk {
-            Some(ref x) => match Key::from_base64(&x) {
+            Some(ref x) => match Key::from_base64(x) {
                 Ok(x) => Some(x),
                 Err(_) => {
                     return Err(Box::new(BadParameterError::new(
@@ -153,7 +153,7 @@ impl PlatformInterface for Interface {
             .map(|x| x.unwrap())
             .collect();
 
-        peercfg = peercfg.add_allowed_ips(&allowed_ips.as_slice());
+        peercfg = peercfg.add_allowed_ips(allowed_ips.as_slice());
 
         match DeviceUpdate::new()
             .add_peer(peercfg)
@@ -176,7 +176,7 @@ impl PlatformInterface for Interface {
         Ok(self.peers.values().cloned().collect())
     }
 
-    fn get_peer(&self, pubkey: &String) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
+    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
         let pk = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
@@ -194,8 +194,8 @@ impl PlatformInterface for Interface {
         }
     }
 
-    fn remove_peer(&mut self, pubkey: &String) -> Result<(), Box<dyn VpnctrlError>> {
-        let pk = match Key::from_base64(&pubkey) {
+    fn remove_peer(&mut self, pubkey: &str) -> Result<(), Box<dyn VpnctrlError>> {
+        let pk = match Key::from_base64(pubkey) {
             Ok(x) => x,
             Err(_) => {
                 return Err(Box::new(BadParameterError::new(
@@ -279,7 +279,7 @@ impl PlatformInterface for Interface {
 
     fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
         let ipns: Vec<IpNetwork> = ips
-            .into_iter()
+            .iter()
             .map(|x| x.parse())
             .filter(|x| x.is_ok())
             .map(|x| x.unwrap())

@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, RwLock};
 
 use ::prometheus::{Encoder, TextEncoder};
+use dashmap::{DashMap, DashSet};
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -9,7 +10,7 @@ use rocket::{serde, Shutdown, State};
 
 use crate::api::tokenauth::ApiKey;
 use crate::vpnctrl::platform_specific::common::PlatformRoute;
-use crate::vpnctrl::platform_specific::{PlatformSpecificFactory, Route};
+use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
 
 use self::types::{IpStore, RouteManagerStore};
 
@@ -31,8 +32,8 @@ async fn shutdown_daemon(
     match magic.magic {
         0xfee1dead => {
             // Shutdown
-            let mut ifaces = iface_store.iface_states.lock().unwrap();
-            let keys: Vec<String> = { ifaces.keys().cloned().collect() };
+            let ifaces = &iface_store.iface_states;
+            let keys: Vec<String> = { ifaces.iter().map(|x| x.key().clone()).collect() };
 
             for k in keys {
                 if let Some(x) = ifaces.get(&k) {
@@ -72,11 +73,11 @@ async fn prometheus(
     iface_store: &State<InterfaceStore>,
     prom_store: &State<PrometheusStore>,
 ) -> (Status, String) {
-    let mut ifaces = iface_store.iface_states.lock().unwrap();
+    let ifaces = &iface_store.iface_states;
 
     // Update
 
-    for iface in ifaces.values() {
+    for iface in ifaces.iter() {
         let ifacestat = iface.lock().unwrap();
         let trafficstat = match ifacestat.interface.get_trafficstats() {
             Ok(x) => x,
@@ -155,17 +156,17 @@ pub(crate) fn stage() -> AdHoc {
                 ],
             )
             .manage(InterfaceStore {
-                iface_states: Mutex::new(HashMap::new()),
+                iface_states: DashMap::new(),
             })
             .manage(RouteManagerStore {
                 route_manager: Mutex::new(route_manager),
-                route_store: Mutex::new(HashMap::new()),
+                route_store: DashMap::new(),
             })
             .manage(IpStore {
-                v4: Mutex::new(HashMap::new()),
-                v4_last_count: Mutex::new(0),
-                v6: Mutex::new(HashMap::new()),
-                v6_last_count: Mutex::new(0),
+                v4: DashSet::new(),
+                v4_last_count: RwLock::new(0),
+                v6: DashSet::new(),
+                v6_last_count: RwLock::new(0),
             })
     })
 }

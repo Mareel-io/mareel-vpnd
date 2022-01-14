@@ -27,7 +27,7 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn add_route(&mut self, ifname: &String, cidr: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), Box<dyn VpnctrlError>> {
         let wgc_ifname: InterfaceName = match ifname.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
@@ -49,8 +49,8 @@ impl PlatformRoute for Route {
 
     fn remove_route(
         &mut self,
-        ifname: &String,
-        cidr: &String,
+        ifname: &str,
+        cidr: &str,
     ) -> Result<(), Box<dyn VpnctrlError>> {
         let wgc_ifname: InterfaceName = match ifname.parse() {
             Ok(ifname) => ifname,
@@ -71,7 +71,7 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn add_route_bypass(&mut self, _address: &String) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route_bypass(&mut self, _address: &str) -> Result<(), Box<dyn VpnctrlError>> {
         // No need for this. fwmark will handle clutter for us
         Ok(())
     }

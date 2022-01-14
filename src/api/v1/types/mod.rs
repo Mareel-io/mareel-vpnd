@@ -1,12 +1,13 @@
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, RwLock},
 };
 
+use dashmap::{DashMap, DashSet};
 use prometheus::Counter;
 
-use crate::vpnctrl::platform_specific::common::{PlatformInterface, PlatformRoute};
-use crate::vpnctrl::platform_specific::{Interface, Route};
+use crate::vpnctrl::platform_specific::common::PlatformInterface;
+use crate::vpnctrl::platform_specific::Route;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -64,17 +65,17 @@ pub(crate) struct RouteConfigurationMessage {
 }
 
 pub(crate) struct InterfaceStore {
-    pub(crate) iface_states: Mutex<HashMap<String, Arc<Mutex<IfaceState>>>>,
+    pub(crate) iface_states: DashMap<String, Arc<Mutex<IfaceState>>>,
 }
 
 pub(crate) struct IpStore {
-    pub(crate) v4: Mutex<HashMap<u32, bool>>,
-    pub(crate) v4_last_count: Mutex<u32>,
-    pub(crate) v6: Mutex<HashMap<u64, bool>>,
-    pub(crate) v6_last_count: Mutex<u64>,
+    pub(crate) v4: DashSet<u32>,
+    pub(crate) v4_last_count: RwLock<u32>,
+    pub(crate) v6: DashSet<u64>,
+    pub(crate) v6_last_count: RwLock<u64>,
 }
 
 pub(crate) struct RouteManagerStore {
     pub route_manager: Mutex<Box<Route>>,
-    pub route_store: Mutex<HashMap<String, HashMap<String, bool>>>,
+    pub route_store: DashMap<String, HashMap<String, bool>>,
 }
