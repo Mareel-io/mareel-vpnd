@@ -70,7 +70,7 @@ pub(crate) async fn create_iface(
     }
 
     // Create interface
-    let iface = match PlatformSpecificFactory::get_interface(&ifcfg.name) {
+    let iface = match async {PlatformSpecificFactory::get_interface(&ifcfg.name)}.await {
         Ok(mut x) => {
             match x.set_config(WgIfCfg {
                 listen_port: ifcfg.listen_port,
@@ -167,9 +167,7 @@ pub(crate) async fn delete_iface(
     }
 
     // Remove all route owned by the interface
-    if let Some(_) = rs.get(&id) {
-        rs.remove(&id);
-    }
+    rs.remove(&id);
 
     match ifaces.get(&id) {
         Some(x) => {
@@ -180,6 +178,7 @@ pub(crate) async fn delete_iface(
                 reg.unregister(Box::new(rx_cnt.clone())).unwrap();
             }
             drop(iface);
+            drop(x);
             ifaces.remove(&id);
             (Status::Ok, ApiResponse::ok("Ok".to_string()))
         }
