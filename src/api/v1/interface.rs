@@ -174,6 +174,8 @@ pub(crate) async fn delete_iface(
                 reg.unregister(Box::new(tx_cnt.clone())).unwrap();
                 reg.unregister(Box::new(rx_cnt.clone())).unwrap();
             }
+
+            // Wait for iface drop explictly
             drop(iface);
             drop(x);
             ifaces.remove(&id);
