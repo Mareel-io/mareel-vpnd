@@ -233,10 +233,8 @@ pub(crate) async fn delete_peer(
     }
 
     let reg = prom_store.registry.lock().unwrap();
-    #[allow(unused_must_use)]
-    reg.unregister(Box::new(tx_counter));
-    #[allow(unused_must_use)]
-    reg.unregister(Box::new(rx_counter));
+    reg.unregister(Box::new(tx_counter)).ok();
+    reg.unregister(Box::new(rx_counter)).ok();
     drop(reg);
 
     iface_state.peer_cfgs.remove(&pubk);

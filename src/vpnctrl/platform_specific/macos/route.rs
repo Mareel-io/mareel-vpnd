@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use super::super::common::{PlatformError, PlatformRoute};
+use super::super::common::PlatformRoute;
 use crate::vpnctrl::error::VpnctrlError;
 use wireguard_control::backends::userspace::resolve_tun;
 
@@ -30,7 +30,7 @@ impl PlatformRoute for Route {
     fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         };
 
         // TODO: Support IPv6!
@@ -45,14 +45,14 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 
     fn remove_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         };
 
         // TODO: Support IPv6!
@@ -67,7 +67,7 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 
@@ -84,7 +84,7 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 
@@ -92,7 +92,7 @@ impl PlatformRoute for Route {
         // Back up default route
         self.default_gw = match Self::get_default_node_cmd("-inet") {
             Ok(x) => x,
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         };
 
         self.default_route_removed = false;
@@ -117,7 +117,7 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => Ok(()),
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 
@@ -137,7 +137,7 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => {}
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         };
 
         // TODO: Support IPv6!
@@ -152,7 +152,7 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 }
@@ -162,7 +162,7 @@ impl Route {
         let lib_ifname: InterfaceName = match alias.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid address format".to_string(),
                 });
             }
@@ -170,18 +170,16 @@ impl Route {
 
         match resolve_tun(&lib_ifname) {
             Ok(x) => Ok(x),
-            Err(_) => {
-                return Err(VpnctrlError::InternalError {
-                    msg: "What the HELL?".to_string(),
-                })
-            }
+            Err(_) => Err(VpnctrlError::Internal {
+                msg: "What the HELL?".to_string(),
+            }),
         }
     }
 
     // Retrieves the node that's currently used to reach 0.0.0.0/0
     // Arguments can be either -inet or -inet6
     fn get_default_node_cmd(if_family: &'static str) -> Result<(String, String), VpnctrlError> {
-        let mut cmd_out = Command::new("route")
+        let cmd_out = Command::new("route")
             .arg("-n")
             .arg("get")
             .arg(if_family)
@@ -191,7 +189,7 @@ impl Route {
         let stdout = match cmd_out {
             Ok(x) => x.stdout,
             Err(_) => {
-                return Err(VpnctrlError::InternalError {
+                return Err(VpnctrlError::Internal {
                     msg: "Failed to run route!".to_string(),
                 })
             }
@@ -199,7 +197,7 @@ impl Route {
 
         let output = String::from_utf8(stdout).map_err(|e| {
             log::error!("Failed to parse utf-8 bytes from output of netstat - {}", e);
-            VpnctrlError::InternalError {
+            VpnctrlError::Internal {
                 msg: "failed to parse utf-8".to_string(),
             }
         })?;

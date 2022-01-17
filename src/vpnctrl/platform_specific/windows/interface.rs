@@ -7,9 +7,7 @@ use wireguard_nt::{Adapter, SetInterface, SetPeer};
 
 use ipnet::IpNet;
 
-use super::super::common::{
-    InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgPeerCfg,
-};
+use super::super::common::{InterfaceStatus, PeerTrafficStat, PlatformInterface, WgPeerCfg};
 
 use crate::vpnctrl::error::VpnctrlError;
 
@@ -65,7 +63,7 @@ impl PlatformInterface for Interface {
             &(match base64::decode(cfg.privkey) {
                 Ok(x) => x,
                 Err(_) => {
-                    return Err(VpnctrlError::BadParameterError {
+                    return Err(VpnctrlError::BadParameter {
                         msg: "Invalid privkey format".to_string(),
                     })
                 }
@@ -81,7 +79,7 @@ impl PlatformInterface for Interface {
 
         let ret = match self.iface.set_config(&(self.iface_cfg)) {
             Ok(()) => Ok(()),
-            Err(e) => return Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         };
 
         self.port = match cfg.listen_port {
@@ -98,7 +96,7 @@ impl PlatformInterface for Interface {
         let pubkey = match base64::decode(peer.pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid privkey format".to_string(),
                 })
             }
@@ -112,7 +110,7 @@ impl PlatformInterface for Interface {
                     Some(psk)
                 }
                 Err(_) => {
-                    return Err(VpnctrlError::BadParameterError {
+                    return Err(VpnctrlError::BadParameter {
                         msg: "Invalid psk format".to_string(),
                     })
                 }
@@ -124,7 +122,7 @@ impl PlatformInterface for Interface {
             Some(x) => match SocketAddr::from_str(&x) {
                 Ok(x) => x,
                 Err(_) => {
-                    return Err(VpnctrlError::BadParameterError {
+                    return Err(VpnctrlError::BadParameter {
                         msg: "Invalid endpoint address".to_string(),
                     })
                 }
@@ -145,7 +143,7 @@ impl PlatformInterface for Interface {
 
         match self.peers.get(pubkey.as_slice()) {
             Some(_) => {
-                return Err(VpnctrlError::DuplicatedEntryError {
+                return Err(VpnctrlError::DuplicatedEntry {
                     msg: "Duplicated entry".to_string(),
                 });
             }
@@ -157,7 +155,7 @@ impl PlatformInterface for Interface {
                         preshared_key: psk,
                         keep_alive: peer.keep_alive,
                         endpoint,
-                        allowed_ips: allowed_ips,
+                        allowed_ips,
                     },
                 );
             }
@@ -179,7 +177,7 @@ impl PlatformInterface for Interface {
         let pk = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid privkey format".to_string(),
                 })
             }
@@ -187,7 +185,7 @@ impl PlatformInterface for Interface {
 
         match self.peers.get(pk.as_slice()) {
             Some(x) => Ok(Self::convert_to_wgpeercfg(x)),
-            None => Err(VpnctrlError::EntryNotFoundError {
+            None => Err(VpnctrlError::EntryNotFound {
                 msg: "Entry not found!".to_string(),
             }),
         }
@@ -197,7 +195,7 @@ impl PlatformInterface for Interface {
         let pubkey = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid privkey format".to_string(),
                 })
             }
@@ -217,7 +215,7 @@ impl PlatformInterface for Interface {
     }
 
     fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, VpnctrlError> {
-        Err(VpnctrlError::InternalError {
+        Err(VpnctrlError::Internal {
             msg: "Not implemented yet".to_string(),
         })
     }
@@ -234,15 +232,15 @@ impl PlatformInterface for Interface {
 
     fn set_ip(&mut self, ips: &[String]) -> Result<(), VpnctrlError> {
         let iplist: Vec<IpNet> = ips
-            .into_iter()
-            .map(|x| IpNet::from_str(&x))
+            .iter()
+            .map(|x| IpNet::from_str(x))
             .filter(|x| x.is_ok())
             .map(|x| x.unwrap())
             .collect();
 
         match self.iface.set_default_route(&iplist, &self.iface_cfg) {
             Ok(()) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 }
@@ -253,7 +251,7 @@ impl Interface {
             Ok(iface) => Ok(iface),
             Err((_, wireguard)) => match Adapter::create(wireguard, IF_POOL, name, None) {
                 Ok(iface) => Ok(iface),
-                Err((e, _)) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+                Err((e, _)) => Err(VpnctrlError::Internal { msg: e.to_string() }),
             },
         }
     }
@@ -264,7 +262,7 @@ impl Interface {
 
         match self.iface.set_config(&(self.iface_cfg)) {
             Ok(()) => Ok(()),
-            Err(e) => Err(VpnctrlError::InternalError { msg: e.to_string() }),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
 

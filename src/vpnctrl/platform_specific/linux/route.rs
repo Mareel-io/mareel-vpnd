@@ -1,7 +1,6 @@
 use ipnetwork::IpNetwork;
 use wireguard_control::InterfaceName;
 
-use super::super::common::PlatformError;
 use super::super::common::PlatformRoute;
 use crate::vpnctrl::error::VpnctrlError;
 use crate::vpnctrl::netlink;
@@ -21,7 +20,7 @@ impl PlatformRoute for Route {
     fn init(&mut self) -> Result<(), VpnctrlError> {
         match netlink::add_rule(self.fwmark, self.fwmark, 0x7363) {
             Ok(_) => Ok(()),
-            Err(_) => Err(VpnctrlError::InternalError {
+            Err(_) => Err(VpnctrlError::Internal {
                 msg: "Failed to set routing rule".to_string(),
             }),
         }
@@ -31,7 +30,7 @@ impl PlatformRoute for Route {
         let wgc_ifname: InterfaceName = match ifname.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid address format".to_string(),
                 });
             }
@@ -40,14 +39,14 @@ impl PlatformRoute for Route {
         let ipn: IpNetwork = match cidr.parse() {
             Ok(x) => x,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "bad cidr".to_string(),
                 })
             }
         };
         match netlink::add_route(&wgc_ifname, self.fwmark, ipn) {
             Ok(_) => Ok(()),
-            Err(_) => Err(VpnctrlError::InternalError {
+            Err(_) => Err(VpnctrlError::Internal {
                 msg: "Internal error".to_string(),
             }),
         }
@@ -57,7 +56,7 @@ impl PlatformRoute for Route {
         let wgc_ifname: InterfaceName = match ifname.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "Invalid address format".to_string(),
                 });
             }
@@ -66,14 +65,14 @@ impl PlatformRoute for Route {
         let ipn: IpNetwork = match cidr.parse() {
             Ok(x) => x,
             Err(_) => {
-                return Err(VpnctrlError::BadParameterError {
+                return Err(VpnctrlError::BadParameter {
                     msg: "bad cidr".to_string(),
                 })
             }
         };
         match netlink::del_route(&wgc_ifname, self.fwmark, ipn) {
             Ok(_) => Ok(()),
-            Err(_) => Err(VpnctrlError::InternalError {
+            Err(_) => Err(VpnctrlError::Internal {
                 msg: "Internal error".to_string(),
             }),
         }

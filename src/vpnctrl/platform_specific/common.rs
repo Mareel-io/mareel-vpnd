@@ -1,5 +1,3 @@
-use std::fmt;
-
 use custom_error::custom_error;
 
 use crate::vpnctrl::error::VpnctrlError;

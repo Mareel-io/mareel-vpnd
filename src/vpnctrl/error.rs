@@ -1,8 +1,8 @@
 use custom_error::custom_error;
 
 custom_error! {pub VpnctrlError
-    BadParameterError{msg: String} = "Bad parameter: {msg}",
-    DuplicatedEntryError{msg: String} = "Duplicated entry: {msg}",
-    EntryNotFoundError{msg: String} = "Entry not found: {msg}",
-    InternalError{msg: String} = "Internal error: {msg}",
+    BadParameter{msg: String} = "Bad parameter: {msg}",
+    DuplicatedEntry{msg: String} = "Duplicated entry: {msg}",
+    EntryNotFound{msg: String} = "Entry not found: {msg}",
+    Internal{msg: String} = "Internal error: {msg}",
 }

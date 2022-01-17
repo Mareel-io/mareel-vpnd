@@ -1,4 +1,4 @@
-use self::common::{PlatformError, PlatformInterface, PlatformRoute};
+use self::common::{PlatformInterface, PlatformRoute};
 
 // Platform common
 pub(crate) mod common;
