@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::process::Command;
 use std::str::FromStr;
+use std::{thread, time};
 
 use wireguard_control::{
     AllowedIp, Backend, Device, DeviceUpdate, InterfaceName, Key, PeerConfigBuilder,
@@ -340,5 +341,19 @@ impl Drop for Interface {
         };
 
         device.delete().ok();
+
+        // Wait for real deletion
+        loop {
+            thread::sleep(time::Duration::from_millis(10));
+            let res = Command::new("ifconfig")
+                .arg(&self.real_ifname)
+                .output()
+                .expect("Failed to run ifconfig!");
+
+            if !res.status.success() {
+                // Real ifname is gone! interface deleted!
+                break;
+            }
+        }
     }
 }
