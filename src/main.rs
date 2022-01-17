@@ -1,4 +1,5 @@
 use std::net::IpAddr;
+use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
@@ -259,9 +260,11 @@ fn main() -> Result<(), ()> {
     let wg_impl = match args.wireguard.clone() {
         Some(x) => x,
         None => {
-            let mut wgpath = std::env::current_exe().unwrap();
-            wgpath.pop();
-            wgpath.push(WG_USERSPACE_IMPL);
+            //let mut wgpath = std::env::current_exe().unwrap();
+            //wgpath.pop();
+            //wgpath.push(WG_USERSPACE_IMPL);
+
+            let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
 
             cfg.wireguard
                 .userspace
@@ -270,10 +273,12 @@ fn main() -> Result<(), ()> {
     };
 
     fn launch_new(wg_impl: String) -> Result<(), ()> {
+        println!("Launching with {}", wg_impl);
         let mut cmd = Command::new(std::env::current_exe().unwrap());
         let cmd_cfg = cmd
             .args(std::env::args().skip(1))
-            .env("WG_USERSPACE_IMPLEMENTATION", wg_impl)
+            .env("WG_USERSPACE_IMPLEMENTATION", &wg_impl)
+            .env("WG_QUICK_USERSPACE_IMPLEMENTATION", &wg_impl)
             .env("WG_SUDO", "1");
 
         #[cfg(target_family = "unix")]

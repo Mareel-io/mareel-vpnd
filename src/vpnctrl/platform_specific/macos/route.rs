@@ -49,11 +49,7 @@ impl PlatformRoute for Route {
         }
     }
 
-    fn remove_route(
-        &mut self,
-        ifname: &str,
-        cidr: &str,
-    ) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_route(&mut self, ifname: &str, cidr: &str) -> Result<(), Box<dyn VpnctrlError>> {
         let real_ifname = match Self::get_real_ifname(ifname) {
             Ok(x) => x,
             Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),

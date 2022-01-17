@@ -20,11 +20,7 @@ impl PlatformRoute for Route {
         Ok(()) // wireguard-nt library does some routing stuff, so just ignore it for now...
     }
 
-    fn remove_route(
-        &mut self,
-        _ifname: &str,
-        _ip: &str,
-    ) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_route(&mut self, _ifname: &str, _ip: &str) -> Result<(), Box<dyn VpnctrlError>> {
         Err(Box::new(InternalError::new(
             "Not implemented yet".to_string(),
         )))
