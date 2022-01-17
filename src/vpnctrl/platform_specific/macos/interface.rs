@@ -347,11 +347,14 @@ impl Drop for Interface {
             thread::sleep(time::Duration::from_millis(10));
             let res = Command::new("ifconfig")
                 .arg(&self.real_ifname)
-                .output();
+                .output()
+                .expect("Failed to run ifconfig!");
 
-            if res.is_err() {
+            if !res.status.success() {
                 // Real ifname is gone! interface deleted!
-                break
+                break;
+            } else {
+                println!("Interface {} is still alive. waiting...", &self.real_ifname);
             }
         }
     }

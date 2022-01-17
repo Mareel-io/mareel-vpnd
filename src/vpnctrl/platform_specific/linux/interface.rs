@@ -40,9 +40,7 @@ impl PlatformInterface for Interface {
         match DeviceUpdate::new().apply(&ifname, Backend::Kernel) {
             Ok(_) => (),
             Err(e) => {
-                return Err(VpnctrlError::Internal {
-                    msg: e.to_string(),
-                });
+                return Err(VpnctrlError::Internal { msg: e.to_string() });
             }
         }
 
