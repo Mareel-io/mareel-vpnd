@@ -40,17 +40,16 @@ impl PlatformInterface for Interface {
         match DeviceUpdate::new().apply(&ifname, Backend::Kernel) {
             Ok(_) => (),
             Err(e) => {
-                println!("{}", e.to_string());
                 return Err(VpnctrlError::Internal {
-                    msg: "Failed to create interface".to_string(),
+                    msg: e.to_string(),
                 });
             }
         }
 
         Ok(Interface {
             ifname,
-            //backend: Backend::Kernel,
-            backend: Backend::Userspace,
+            backend: Backend::Kernel,
+            //backend: Backend::Userspace,
             privkey: Key::zero(),
             pubkey: Key::zero(),
             port: 0,
