@@ -56,10 +56,10 @@ pub(crate) async fn create_iface(
         let mut rm = rms.route_manager.lock().unwrap();
         match rm.backup_default_route() {
             Ok(_) => {}
-            Err(_x) => {
+            Err(x) => {
                 return (
                     Status::InternalServerError,
-                    ApiResponse::err(-1, "Uh-oh. :("),
+                    ApiResponse::err(-1, &x.to_string()),
                 );
             }
         }
@@ -74,8 +74,9 @@ pub(crate) async fn create_iface(
                 fwmark: 0x7370616b,
             }) {
                 Ok(_) => Box::new(x),
-                Err(_e) => {
-                    return (Status::BadRequest, ApiResponse::err(-1, "Uh-oh. :("));
+                Err(e) => {
+                    println!("{}", &e.to_string());
+                    return (Status::BadRequest, ApiResponse::err(-1, &e.to_string()));
                 }
             }
         }

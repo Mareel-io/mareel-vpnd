@@ -1,48 +1,43 @@
-use super::super::common::PlatformError;
 use super::super::common::PlatformRoute;
-use crate::vpnctrl::error::{InternalError, VpnctrlError};
+use crate::vpnctrl::error::VpnctrlError;
 
 pub struct Route {}
 
 impl PlatformRoute for Route {
-    fn new(_fwmark: u32) -> Result<Self, PlatformError>
+    fn new(_fwmark: u32) -> Result<Self, VpnctrlError>
     where
         Self: Sized,
     {
         Ok(Self {})
     }
 
-    fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+    fn init(&mut self) -> Result<(), VpnctrlError> {
         Ok(())
     }
 
-    fn add_route(&mut self, _ifname: &str, _ip: &str) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route(&mut self, _ifname: &str, _ip: &str) -> Result<(), VpnctrlError> {
         Ok(()) // wireguard-nt library does some routing stuff, so just ignore it for now...
     }
 
-    fn remove_route(
-        &mut self,
-        _ifname: &str,
-        _ip: &str,
-    ) -> Result<(), Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+    fn remove_route(&mut self, _ifname: &str, _ip: &str) -> Result<(), VpnctrlError> {
+        Err(VpnctrlError::Internal {
+            msg: "Not implemented yet".to_string(),
+        })
     }
 
-    fn add_route_bypass(&mut self, _address: &str) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_route_bypass(&mut self, _address: &str) -> Result<(), VpnctrlError> {
         Ok(())
     }
 
-    fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+    fn backup_default_route(&mut self) -> Result<(), VpnctrlError> {
         Ok(())
     }
 
-    fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_default_route(&mut self) -> Result<(), VpnctrlError> {
         Ok(())
     }
 
-    fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>> {
+    fn restore_default_route(&mut self) -> Result<(), VpnctrlError> {
         Ok(())
     }
 }

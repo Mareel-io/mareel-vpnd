@@ -20,6 +20,7 @@ shell-escape = "0.1.5"
 regex = "1.5.4"
 dashmap = "5.0.0"
 prometheus = { version = "0.13.0", features = ["process"] }
+custom_error = "1.9.2"
 
 [target.'cfg(feature = "keytar")'.dependencies]
 keytar = "0.1.6"

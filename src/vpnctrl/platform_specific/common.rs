@@ -1,24 +1,9 @@
-use std::fmt;
+use custom_error::custom_error;
 
 use crate::vpnctrl::error::VpnctrlError;
 
-#[derive(Debug, Clone)]
-pub struct PlatformError {
-    msg: String,
-}
-
-impl fmt::Display for PlatformError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PlatformError: {}", self.msg)
-    }
-}
-
-impl VpnctrlError for PlatformError {}
-
-impl PlatformError {
-    pub fn new(msg: String) -> PlatformError {
-        PlatformError { msg }
-    }
+custom_error! {pub PlatformError
+    VpnctrlError{source: VpnctrlError} = "VpnctrlError",
 }
 
 #[derive(Clone)]
@@ -61,31 +46,30 @@ pub struct PeerTrafficStat {
 }
 
 pub trait PlatformInterface {
-    fn new(name: &str) -> Result<Self, PlatformError>
+    fn new(name: &str) -> Result<Self, VpnctrlError>
     where
         Self: Sized;
-    fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>>;
-    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, Box<dyn VpnctrlError>>;
-    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, Box<dyn VpnctrlError>>;
-    fn remove_peer(&mut self, pubkey: &str) -> Result<(), Box<dyn VpnctrlError>>;
+    fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), VpnctrlError>;
+    fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), VpnctrlError>;
+    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, VpnctrlError>;
+    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, VpnctrlError>;
+    fn remove_peer(&mut self, pubkey: &str) -> Result<(), VpnctrlError>;
     fn get_status(&self) -> InterfaceStatus;
-    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>>;
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, VpnctrlError>;
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
-    fn set_ip(&mut self, ips: &[String]) -> Result<(), Box<dyn VpnctrlError>>;
+    fn set_ip(&mut self, ips: &[String]) -> Result<(), VpnctrlError>;
 }
 
 pub trait PlatformRoute {
-    fn new(fwmark: u32) -> Result<Self, PlatformError>
+    fn new(fwmark: u32) -> Result<Self, VpnctrlError>
     where
         Self: Sized;
-    fn init(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), Box<dyn VpnctrlError>>;
-    fn remove_route(&mut self, ifname: &str, cidr: &str)
-        -> Result<(), Box<dyn VpnctrlError>>;
-    fn add_route_bypass(&mut self, address: &str) -> Result<(), Box<dyn VpnctrlError>>;
-    fn backup_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
-    fn remove_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
-    fn restore_default_route(&mut self) -> Result<(), Box<dyn VpnctrlError>>;
+    fn init(&mut self) -> Result<(), VpnctrlError>;
+    fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError>;
+    fn remove_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError>;
+    fn add_route_bypass(&mut self, address: &str) -> Result<(), VpnctrlError>;
+    fn backup_default_route(&mut self) -> Result<(), VpnctrlError>;
+    fn remove_default_route(&mut self) -> Result<(), VpnctrlError>;
+    fn restore_default_route(&mut self) -> Result<(), VpnctrlError>;
 }

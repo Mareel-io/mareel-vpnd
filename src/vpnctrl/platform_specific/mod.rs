@@ -1,4 +1,4 @@
-use self::common::{PlatformError, PlatformInterface, PlatformRoute};
+use self::common::{PlatformInterface, PlatformRoute};
 
 // Platform common
 pub(crate) mod common;
@@ -18,14 +18,16 @@ mod linux;
 #[cfg(target_os = "linux")]
 pub(crate) use linux::*;
 
+use super::error::VpnctrlError;
+
 pub struct PlatformSpecificFactory;
 
 impl PlatformSpecificFactory {
-    pub fn get_interface(name: &str) -> Result<Interface, PlatformError> {
+    pub fn get_interface(name: &str) -> Result<Interface, VpnctrlError> {
         Interface::new(name)
     }
 
-    pub fn get_route(fwmark: u32) -> Result<Route, PlatformError> {
+    pub fn get_route(fwmark: u32) -> Result<Route, VpnctrlError> {
         Route::new(fwmark)
     }
 }
