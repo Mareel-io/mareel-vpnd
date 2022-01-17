@@ -345,10 +345,11 @@ impl Drop for Interface {
         // Wait for real deletion
         loop {
             thread::sleep(time::Duration::from_millis(10));
-            let cmd = Command::new("ifconfig")
-                .arg(&self.real_ifname);
+            let res = Command::new("ifconfig")
+                .arg(&self.real_ifname)
+                .output();
 
-            if cmd.output().is_err() {
+            if res.is_err() {
                 // Real ifname is gone! interface deleted!
                 break
             }
