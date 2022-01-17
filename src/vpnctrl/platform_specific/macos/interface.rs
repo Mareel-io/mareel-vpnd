@@ -353,8 +353,6 @@ impl Drop for Interface {
             if !res.status.success() {
                 // Real ifname is gone! interface deleted!
                 break;
-            } else {
-                println!("Interface {} is still alive. waiting...", &self.real_ifname);
             }
         }
     }
