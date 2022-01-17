@@ -13,9 +13,8 @@ use wireguard_control::backends::userspace::resolve_tun;
 use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformError, PlatformInterface, WgIfCfg, WgPeerCfg,
 };
-use crate::vpnctrl::error::{
-    BadParameterError, DuplicatedEntryError, EntryNotFoundError, InternalError, VpnctrlError,
-};
+
+use crate::vpnctrl::error::VpnctrlError;
 
 pub struct Interface {
     ifname: InterfaceName,
@@ -29,28 +28,34 @@ pub struct Interface {
 }
 
 impl PlatformInterface for Interface {
-    fn new(name: &str) -> Result<Self, PlatformError>
+    fn new(name: &str) -> Result<Self, VpnctrlError>
     where
         Self: Sized,
     {
         let ifname: InterfaceName = match name.parse() {
             Ok(ifname) => ifname,
             Err(_) => {
-                return Err(PlatformError::new("Invalid address format".to_string()));
+                return Err(VpnctrlError::BadParameterError {
+                    msg: "Invalid address format".to_string(),
+                });
             }
         };
 
         match DeviceUpdate::new().apply(&ifname, Backend::Userspace) {
             Ok(_) => (),
             Err(_) => {
-                return Err(PlatformError::new("Failed to create interface".to_string()));
+                return Err(VpnctrlError::InternalError {
+                    msg: "Failed to create interface".to_string(),
+                });
             }
         }
 
         let real_ifname: String = match resolve_tun(&ifname) {
             Ok(x) => x,
             Err(_) => {
-                return Err(PlatformError::new("What the HELL?".to_string()));
+                return Err(VpnctrlError::InternalError {
+                    msg: "What the HELL?".to_string(),
+                });
             }
         };
 
@@ -66,13 +71,13 @@ impl PlatformInterface for Interface {
         })
     }
 
-    fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_config(&mut self, cfg: WgIfCfg) -> Result<(), VpnctrlError> {
         self.privkey = match Key::from_base64(cfg.privkey.as_str()) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new(
-                    "Invalid privkey format".to_string(),
-                )))
+                return Err(VpnctrlError::BadParameterError {
+                    msg: "Invalid privkey format".to_string(),
+                })
             }
         };
 
@@ -88,22 +93,22 @@ impl PlatformInterface for Interface {
         match update.apply(&self.ifname, self.backend) {
             Ok(_) => (),
             Err(_) => {
-                return Err(Box::new(InternalError::new(
-                    "Failed to update interface".to_string(),
-                )));
+                return Err(VpnctrlError::InternalError {
+                    msg: "Failed to update interface".to_string(),
+                })
             }
         };
 
         Ok(())
     }
 
-    fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), Box<dyn VpnctrlError>> {
+    fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), VpnctrlError> {
         let pubkey = match Key::from_base64(&peer.pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new(
-                    "Invalid pubkey format".to_string(),
-                )))
+                return Err(VpnctrlError::BadParameterError {
+                    msg: "Invalid pubkey format".to_string(),
+                })
             }
         };
 
@@ -111,9 +116,9 @@ impl PlatformInterface for Interface {
             Some(ref x) => match Key::from_base64(&x) {
                 Ok(x) => Some(x),
                 Err(_) => {
-                    return Err(Box::new(BadParameterError::new(
-                        "Invalid psk format".to_string(),
-                    )))
+                    return Err(VpnctrlError::BadParameterError {
+                        msg: "Invalid psk format".to_string(),
+                    })
                 }
             },
             None => None,
@@ -124,9 +129,9 @@ impl PlatformInterface for Interface {
         pubkey_raw.copy_from_slice(pubkey.as_bytes());
         if self.peers.get(&pubkey_raw).is_some() {
             // Collision!!
-            return Err(Box::new(DuplicatedEntryError::new(
-                "Duplicated peer".to_string(),
-            )));
+            return Err(VpnctrlError::DuplicatedEntryError {
+                msg: "Duplicated peer".to_string(),
+            });
         }
 
         let mut peercfg = PeerConfigBuilder::new(&pubkey);
@@ -140,9 +145,9 @@ impl PlatformInterface for Interface {
                 let endpt: SocketAddr = match x.parse() {
                     Ok(x) => x,
                     Err(_) => {
-                        return Err(Box::new(BadParameterError::new(
-                            "Invalid endpoint format".to_string(),
-                        )))
+                        return Err(VpnctrlError::BadParameterError {
+                            msg: "Invalid endpoint format".to_string(),
+                        })
                     }
                 };
 
@@ -172,9 +177,9 @@ impl PlatformInterface for Interface {
         {
             Ok(_) => (),
             Err(_) => {
-                return Err(Box::new(InternalError::new(
-                    "Failed to update interface".to_string(),
-                )));
+                return Err(VpnctrlError::InternalError {
+                    msg: "Failed to update interface".to_string(),
+                });
             }
         }
 
@@ -183,35 +188,35 @@ impl PlatformInterface for Interface {
         Ok(())
     }
 
-    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, Box<dyn VpnctrlError>> {
+    fn get_peers(&self) -> Result<Vec<WgPeerCfg>, VpnctrlError> {
         Ok(self.peers.values().cloned().collect())
     }
 
-    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, Box<dyn VpnctrlError>> {
+    fn get_peer(&self, pubkey: &str) -> Result<WgPeerCfg, VpnctrlError> {
         let pk = match base64::decode(pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new(
-                    "Invalid privkey format".to_string(),
-                )))
+                return Err(VpnctrlError::BadParameterError {
+                    msg: "Invalid pubkey format".to_string(),
+                })
             }
         };
 
         match self.peers.get(pk.as_slice()) {
             Some(x) => Ok(x.clone()),
-            None => Err(Box::new(EntryNotFoundError::new(
-                "Entry not found!".to_string(),
-            ))),
+            None => Err(VpnctrlError::EntryNotFoundError {
+                msg: "Entry not found!".to_string(),
+            }),
         }
     }
 
-    fn remove_peer(&mut self, pubkey: &str) -> Result<(), Box<dyn VpnctrlError>> {
+    fn remove_peer(&mut self, pubkey: &str) -> Result<(), VpnctrlError> {
         let pk = match Key::from_base64(&pubkey) {
             Ok(x) => x,
             Err(_) => {
-                return Err(Box::new(BadParameterError::new(
-                    "Invalid pubkey format".to_string(),
-                )))
+                return Err(VpnctrlError::BadParameterError {
+                    msg: "Invalid pubkey format".to_string(),
+                })
             }
         };
 
@@ -220,9 +225,9 @@ impl PlatformInterface for Interface {
         pubkey_raw.copy_from_slice(pk.as_bytes());
         if self.peers.get(&pubkey_raw).is_none() {
             // Not exist
-            return Err(Box::new(EntryNotFoundError::new(
-                "Entry not found".to_string(),
-            )));
+            return Err(VpnctrlError::EntryNotFoundError {
+                msg: "Entry not found".to_string(),
+            });
         }
 
         // Remove peer
@@ -232,9 +237,9 @@ impl PlatformInterface for Interface {
         {
             Ok(_) => (),
             Err(_) => {
-                return Err(Box::new(InternalError::new(
-                    "Failed to update interface".to_string(),
-                )));
+                return Err(VpnctrlError::InternalError {
+                    msg: "Failed to update interface".to_string(),
+                })
             }
         };
 
@@ -247,10 +252,25 @@ impl PlatformInterface for Interface {
         self.status.clone()
     }
 
-    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, Box<dyn VpnctrlError>> {
-        Err(Box::new(InternalError::new(
-            "Not implemented yet".to_string(),
-        )))
+    fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, VpnctrlError> {
+        let dev = match Device::get(&self.ifname, self.backend) {
+            Ok(x) => x,
+            Err(_) => {
+                return Err(VpnctrlError::EntryNotFoundError {
+                    msg: "Entry not found".to_string(),
+                })
+            }
+        };
+
+        Ok(dev
+            .peers
+            .into_iter()
+            .map(|x| PeerTrafficStat {
+                pubkey: x.config.public_key.to_base64(),
+                rx_bytes: x.stats.rx_bytes,
+                tx_bytes: x.stats.tx_bytes,
+            })
+            .collect())
     }
 
     fn up(&mut self) -> bool {
@@ -282,7 +302,7 @@ impl PlatformInterface for Interface {
         true
     }
 
-    fn set_ip(&mut self, cidrs: &[String]) -> Result<(), Box<dyn VpnctrlError>> {
+    fn set_ip(&mut self, cidrs: &[String]) -> Result<(), VpnctrlError> {
         let re = Regex::new(r"/.*").unwrap();
 
         for cidr in cidrs {
@@ -297,7 +317,11 @@ impl PlatformInterface for Interface {
                 .output()
             {
                 Ok(_) => {}
-                Err(e) => return Err(Box::new(InternalError::new(e.to_string()))),
+                Err(_e) => {
+                    return Err(VpnctrlError::InternalError {
+                        msg: "Failed to set address".to_string(),
+                    })
+                }
             };
         }
 

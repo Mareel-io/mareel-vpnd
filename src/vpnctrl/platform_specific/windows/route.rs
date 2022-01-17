@@ -20,7 +20,7 @@ impl PlatformRoute for Route {
     }
 
     fn remove_route(&mut self, _ifname: &str, _ip: &str) -> Result<(), VpnctrlError> {
-        Err(VpnctrlError::InternalError{
+        Err(VpnctrlError::InternalError {
             msg: "Not implemented yet".to_string(),
         })
     }

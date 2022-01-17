@@ -185,7 +185,7 @@ impl PlatformInterface for Interface {
             Ok(x) => x,
             Err(_) => {
                 return Err(VpnctrlError::BadParameterError {
-                    msg: "Invalid privkey format".to_string(),
+                    msg: "Invalid pubkey format".to_string(),
                 })
             }
         };
