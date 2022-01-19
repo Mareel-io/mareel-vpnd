@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType, PrometheusStore};
@@ -10,11 +11,56 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
 
+// Raw crypto primitives
+use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+use curve25519_dalek::scalar::Scalar;
+
 use super::types::{
     IfaceState, InterfaceConfig, InterfaceStore, IpConfigurationMessage, RouteConfigurationMessage,
     RouteManagerStore,
 };
 use crate::api::tokenauth::ApiKey;
+
+// Some helper functions
+fn extract_pubkey(private_key: &str) -> Result<String, String> {
+    let pk_bytes: [u8; 32] = match base64::decode(private_key) {
+        Ok(x) => match (x.as_slice().try_into()) as Result<[u8; 32], _> {
+            Ok(mut x) => {
+                // Apply key clamping
+                // TODO: Is it really safe? Research more curve25519 cryptography and find out.
+                x[0] &= 248;
+                x[31] &= 127;
+                x[31] |= 64;
+                x
+            }
+            Err(_) => return Err("Bad private key: wrong size".to_string()),
+        },
+        Err(_) => return Err("Bad private key: not in b64 format!".to_string()),
+    };
+
+    let point = (&ED25519_BASEPOINT_TABLE * &Scalar::from_bits(pk_bytes)).to_montgomery();
+    Ok(base64::encode(point.to_bytes()))
+}
+
+#[test]
+fn test_extract_pubkey_normal() {
+    let privk = "ADD7fFbGmA0TqivcbwW7RACosgn2ZqK5uDSijvUul2c=";
+    let pubk = "LCBsla9u/BT2i9yYKqCi6yHh2nKvvdgyMPVYCkLh/3Y=";
+
+    let our_pubk = extract_pubkey(privk).unwrap();
+
+    assert_eq!(our_pubk, pubk);
+}
+
+#[test]
+fn test_extract_pubkey_clamp() {
+    let privk = "gGHF8XEpNKEnzIjoQNs6CRy5bVBTR8ZMcWbFckkWiv8=";
+    let pubk = "zxUOG5Sb+wZY70iCiK5R4oeTuf1IC/e1whg8GkHl5hI=";
+
+    let our_pubk = extract_pubkey(privk).unwrap();
+
+    assert_eq!(our_pubk, pubk);
+}
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -40,6 +86,11 @@ pub(crate) async fn create_iface(
                 ),
             );
         }
+    };
+
+    let public_key = match extract_pubkey(&private_key) {
+        Ok(x) => x,
+        Err(msg) => return (Status::UnprocessableEntity, ApiResponse::err(-1, &msg)),
     };
 
     if iface_store.iface_states.get(&ifcfg.name).is_some() {
@@ -75,7 +126,6 @@ pub(crate) async fn create_iface(
             }) {
                 Ok(_) => Box::new(x),
                 Err(e) => {
-                    println!("{}", &e.to_string());
                     return (Status::BadRequest, ApiResponse::err(-1, &e.to_string()));
                 }
             }
@@ -88,11 +138,17 @@ pub(crate) async fn create_iface(
         }
     };
 
+    let mut iface_cfg: InterfaceConfig = ifcfg.into_inner();
+
+    // For security reason, do not hold private_key in return object
+    iface_cfg.private_key = None;
+    iface_cfg.public_key = Some(public_key);
+
     iface_states.insert(
-        ifcfg.name.clone(),
+        iface_cfg.name.clone(),
         Arc::new(Mutex::new(IfaceState {
             interface: iface,
-            iface_cfg: ifcfg.into_inner(),
+            iface_cfg,
             peer_cfgs: HashMap::new(),
         })),
     );

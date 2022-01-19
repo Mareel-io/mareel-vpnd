@@ -21,6 +21,7 @@ regex = "1.5.4"
 dashmap = "5.0.0"
 prometheus = { version = "0.13.0", features = ["process"] }
 custom_error = "1.9.2"
+curve25519-dalek = "3.2.0"
 
 [target.'cfg(feature = "keytar")'.dependencies]
 keytar = "0.1.6"
