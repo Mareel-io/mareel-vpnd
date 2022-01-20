@@ -7,6 +7,7 @@ use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{serde, Shutdown, State};
+use rocket_client_addr::ClientAddr;
 
 use crate::api::tokenauth::ApiKey;
 use crate::vpnctrl::platform_specific::common::PlatformRoute;
@@ -63,6 +64,24 @@ async fn heartbeat() -> (Status, Json<HeartbeatMessage>) {
         Json(HeartbeatMessage {
             version: env!("CARGO_PKG_VERSION").to_string(),
             magic: "0x4e6f6374696c756361".into(),
+        }),
+    )
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+struct MyipMessage {
+    pub(crate) ipv4: Option<String>,
+    pub(crate) ipv6: Option<String>,
+}
+
+#[get("/myip")]
+async fn myip(client_addr: &ClientAddr) -> (Status, Json<MyipMessage>) {
+    (
+        Status::Ok,
+        Json::from(MyipMessage {
+            ipv4: client_addr.get_ipv4_string(),
+            ipv6: Some(client_addr.get_ipv6_string()),
         }),
     )
 }
@@ -135,6 +154,7 @@ pub(crate) fn stage() -> AdHoc {
                 routes![
                     shutdown_daemon,
                     heartbeat,
+                    myip,
                     interface::create_iface,
                     interface::get_ifaces,
                     interface::get_iface,

@@ -851,6 +851,7 @@ dependencies = [
  "prometheus",
  "regex",
  "rocket",
+ "rocket-client-addr",
  "serde",
  "shell-escape",
  "toml",
@@ -1370,6 +1371,15 @@ dependencies = [
  "ubyte",
  "version_check",
  "yansi",
+]
+
+[[package]]
+name = "rocket-client-addr"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c316ce5f53b8dc7183326627db40d0896b1c4616cd7f479005ce95aa416fd0c"
+dependencies = [
+ "rocket",
 ]
 
 [[package]]
