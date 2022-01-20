@@ -9,6 +9,7 @@ use wireguard_control::InterfaceName;
 pub struct Route {
     default_gw: (String, String),
     default_route_removed: bool,
+    route_bypass_list: Vec<String>,
 }
 
 impl PlatformRoute for Route {
@@ -19,6 +20,7 @@ impl PlatformRoute for Route {
         Ok(Self {
             default_gw: ("".to_string(), "".to_string()),
             default_route_removed: false,
+            route_bypass_list: vec![],
         })
     }
 
@@ -83,7 +85,10 @@ impl PlatformRoute for Route {
             .arg(&self.default_gw.1)
             .output()
         {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                self.route_bypass_list.push(address.to_string());
+                Ok(())
+            }
             Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
     }
@@ -126,17 +131,20 @@ impl PlatformRoute for Route {
             return Ok(());
         }
 
+        // Remove route bypasses
+        self.cleanup_route_bypass();
+
         // Check our default route is not damaged...
         match Self::get_default_node_cmd("-inet") {
             Ok((nexthop_type, _nexthop)) => {
                 if nexthop_type == "-gateway" {
                     // Something... happened while we are asleep.
-                    return Ok(())
+                    return Ok(());
                 }
 
                 // TODO: This cannot detect route change through PPP daemon or sort of.
                 // TODO: Handle them
-            },
+            }
             Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
 
@@ -172,6 +180,21 @@ impl PlatformRoute for Route {
 }
 
 impl Route {
+    fn cleanup_route_bypass(&mut self) {
+        for addr in self.route_bypass_list.iter() {
+            Command::new("route")
+                .arg("-q")
+                .arg("-n")
+                .arg("delete")
+                .arg("-inet")
+                .arg(addr)
+                .output()
+                .ok();
+        }
+
+        self.route_bypass_list = vec![];
+    }
+
     fn get_real_ifname(alias: &str) -> Result<String, VpnctrlError> {
         let lib_ifname: InterfaceName = match alias.parse() {
             Ok(ifname) => ifname,
