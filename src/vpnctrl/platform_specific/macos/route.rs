@@ -126,6 +126,20 @@ impl PlatformRoute for Route {
             return Ok(());
         }
 
+        // Check our default route is not damaged...
+        match Self::get_default_node_cmd("-inet") {
+            Ok((nexthop_type, _nexthop)) => {
+                if nexthop_type == "-gateway" {
+                    // Something... happened while we are asleep.
+                    return Ok(())
+                }
+
+                // TODO: This cannot detect route change through PPP daemon or sort of.
+                // TODO: Handle them
+            },
+            Err(e) => return Err(VpnctrlError::Internal { msg: e.to_string() }),
+        }
+
         self.default_route_removed = false;
         // TODO: Support IPv6!
         match Command::new("route")
