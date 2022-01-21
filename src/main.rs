@@ -1,5 +1,4 @@
 use std::net::IpAddr;
-use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
@@ -260,11 +259,11 @@ fn main() -> Result<(), ()> {
     let wg_impl = match args.wireguard.clone() {
         Some(x) => x,
         None => {
-            //let mut wgpath = std::env::current_exe().unwrap();
-            //wgpath.pop();
-            //wgpath.push(WG_USERSPACE_IMPL);
+            let mut wgpath = std::env::current_exe().unwrap();
+            wgpath.pop();
+            wgpath.push(WG_USERSPACE_IMPL);
 
-            let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
+            //let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
 
             cfg.wireguard
                 .userspace

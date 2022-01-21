@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, str::FromStr};
+use std::fs;
 
 use serde::Deserialize;
 
@@ -23,10 +23,10 @@ pub struct WireguardConfig {
 pub const WG_USERSPACE_IMPL: &str = "./boringtun";
 
 pub fn read_config(cfgpath: &str, panic_on_notfound: bool) -> Config {
-    //let mut wgpath = std::env::current_exe().unwrap();
-    //wgpath.pop();
-    //wgpath.push(WG_USERSPACE_IMPL);
-    let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
+    let mut wgpath = std::env::current_exe().unwrap();
+    wgpath.pop();
+    wgpath.push(WG_USERSPACE_IMPL);
+    //let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
     match fs::read_to_string(cfgpath) {
         Ok(x) => toml::from_str(&x).expect("Invalid config file!"),
         Err(_) => match panic_on_notfound {
