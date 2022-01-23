@@ -8,7 +8,7 @@ use std::os::unix::prelude::CommandExt;
 
 use clap::Parser;
 
-use config::{read_config, WG_USERSPACE_IMPL};
+use config::read_config;
 use rocket::config::Config;
 use rocket::fairing::AdHoc;
 use rocket::tokio::sync::mpsc::Receiver;
@@ -258,17 +258,11 @@ fn main() -> Result<(), ()> {
     let cfg = read_config(cfgpath, ARGS.config.is_some());
     let wg_impl = match args.wireguard.clone() {
         Some(x) => x,
-        None => {
-            let mut wgpath = std::env::current_exe().unwrap();
-            wgpath.pop();
-            wgpath.push(WG_USERSPACE_IMPL);
-
-            //let wgpath = PathBuf::from_str(WG_USERSPACE_IMPL).unwrap();
-
-            cfg.wireguard
-                .userspace
-                .unwrap_or_else(|| wgpath.to_str().unwrap().to_string())
-        }
+        None => cfg
+            .wireguard
+            .unwrap()
+            .userspace
+            .expect("Wireguard path is not supplied!"),
     };
 
     fn launch_new(wg_impl: String) -> Result<(), ()> {
