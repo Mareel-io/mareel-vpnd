@@ -45,7 +45,7 @@ fn get_default_config() -> Config {
         api: Api {
             listen: None,
             port: None,
-            apikey: "crowbar".to_string(),
+            apikey: "$argon2id$v=19$m=4096,t=3,p=1$mtHixgMiWZiIwrahCxk/rA$3ci+tSnCgVE52OCVaJHoJF3pjPhb2kt4l6l+jHi6Kuw".to_string(),
         },
         wireguard: Some(WireguardConfig {
             userspace: Some(get_wgpath()),

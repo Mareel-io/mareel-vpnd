@@ -3,6 +3,14 @@ name = "mareel-vpnd "
 version = "0.6.5"
 edition = "2018"
 
+[[bin]]
+name = "mareel-vpnd"
+path = "src/mareel-vpnd.rs"
+
+[[bin]]
+name = "vpnd-configgen"
+path = "src/vpnd-configgen.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default=[]
@@ -23,6 +31,8 @@ dashmap = "5.0.0"
 prometheus = { version = "0.13.0", features = ["process"] }
 custom_error = "1.9.2"
 curve25519-dalek = "3.2.0"
+argon2 = "0.3.2"
+rand_core = { version = "0.6", features = ["std"] }
 
 [target.'cfg(feature = "keytar")'.dependencies]
 keytar = "0.1.6"

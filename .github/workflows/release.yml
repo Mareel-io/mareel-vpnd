@@ -40,6 +40,8 @@ jobs:
           path: |
             target/**/release/mareel-vpnd
             target/**/release/mareel-vpnd.exe
+            target/**/release/vpnd-configgen
+            target/**/release/vpnd-configgen.exe
   release:
     name: Release
     runs-on: ubuntu-latest
