@@ -1,6 +1,7 @@
-use argon2::password_hash::{
-    rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-};
+use std::fs::File;
+use std::io::Write;
+
+use argon2::password_hash::{rand_core::OsRng, PasswordHasher, SaltString};
 use argon2::Argon2;
 use clap::Parser;
 use serde::Serialize;
@@ -26,20 +27,18 @@ struct Args {
 }
 
 #[derive(Serialize)]
-struct Config{
+struct Config {
     pub api: Api,
 }
 
 #[derive(Serialize)]
-struct Api{
+struct Api {
     pub listen: String,
     pub port: Option<u16>,
     pub apikey: String,
 }
 
 fn main() -> Result<(), ()> {
-    println!("{}", ARGS.config);
-
     // Generate salt
     let salt = SaltString::generate(&mut OsRng);
     let token = match &ARGS.token {
@@ -48,19 +47,26 @@ fn main() -> Result<(), ()> {
     };
 
     let argon2 = Argon2::default();
-    let token_hash = argon2.hash_password(token.as_bytes(), &salt).unwrap().to_string();
+    let token_hash = argon2
+        .hash_password(token.as_bytes(), &salt)
+        .unwrap()
+        .to_string();
 
     let cfg = Config {
         api: Api {
             listen: "127.0.0.1".to_string(),
             port: ARGS.port,
             apikey: token_hash,
-        }
+        },
     };
 
     let cfgstr = toml::to_string(&cfg).unwrap();
 
-    println!("{}", cfgstr);
+    let mut cfgfile = File::create(&ARGS.config).expect("Failed to create config file!");
+    cfgfile
+        .write_all(cfgstr.as_bytes())
+        .expect("Failed to write to config file!");
+    drop(cfgfile);
 
     Ok(())
 }
