@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct Config {
     pub api: Api,
     pub wireguard: Option<WireguardConfig>,
+    pub cnc: Option<CnC>,
 }
 
 #[derive(Deserialize)]
@@ -19,6 +20,12 @@ pub struct Api {
 pub struct WireguardConfig {
     pub userspace: Option<String>,
     pub use_kernel: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct CnC {
+    pub cnc_url: String,
+    pub max_attempts: Option<usize>,
 }
 
 const WG_USERSPACE_IMPL: &str = "./boringtun";
@@ -51,6 +58,7 @@ fn get_default_config() -> Config {
             userspace: Some(get_wgpath()),
             use_kernel: Some(platform_default_use_wgkernel()),
         }),
+        cnc: None,
     }
 }
 
@@ -78,17 +86,6 @@ fn parse_toml(tomlstr: &str) -> Config {
     cfg
 }
 
-#[cfg(test)]
-#[test]
-fn test_baseline_config() {
-    parse_toml(
-        r##"
-[api]
-apikey = "crowbar"
-    "##,
-    );
-}
-
 pub fn read_config(cfgpath: &str, panic_on_notfound: bool) -> Config {
     match fs::read_to_string(cfgpath) {
         Ok(x) => parse_toml(&x),
@@ -96,5 +93,32 @@ pub fn read_config(cfgpath: &str, panic_on_notfound: bool) -> Config {
             true => panic!("Config file not found!"),
             false => get_default_config(),
         },
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_baseline_config() {
+        super::parse_toml(
+            r##"
+        [api]
+        apikey = "crowbar"
+        "##,
+        );
+    }
+
+    #[test]
+    fn test_cnc_config() {
+        let res = super::parse_toml(
+            r##"
+        [api]
+        apikey = "crowbar"
+        [cnc]
+        cnc_url = "https://example.com"
+        "##,
+        );
+
+        assert_eq!(res.cnc.unwrap().cnc_url, "https://example.com");
     }
 }
