@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Write;
+use std::process::Command;
 
 use argon2::password_hash::{rand_core::OsRng, PasswordHasher, SaltString};
 use argon2::Argon2;
@@ -24,6 +25,9 @@ struct Args {
 
     #[clap(long, short = 'p', value_name = "port")]
     port: Option<u16>,
+
+    #[clap(long, short = 'r', value_name = "method")]
+    reload: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -67,6 +71,33 @@ fn main() -> Result<(), ()> {
         .write_all(cfgstr.as_bytes())
         .expect("Failed to write to config file!");
     drop(cfgfile);
+
+    if ARGS.reload.is_some() {
+        // Launch vpnd and set up the daemon!
+
+        let method = ARGS.reload.as_ref().unwrap();
+        let mut vpnd_path = ::std::env::current_exe().unwrap();
+        vpnd_path.pop();
+        #[cfg(target_os = "windows")]
+        vpnd_path.push("mareel-vpnd.exe");
+        #[cfg(not(target_os = "windows"))]
+        vpnd_path.push("mareel-vpnd");
+
+        Command::new(&vpnd_path)
+            .arg("--uninstall")
+            .arg(method)
+            .output()
+            .expect("Failed to uninstall daemon!");
+        Command::new(&vpnd_path)
+            .arg("--config")
+            .arg(&ARGS.config)
+            .arg("--install")
+            .arg(method)
+            .arg("--start")
+            .arg(method)
+            .output()
+            .expect("Failed to reload daemon!");
+    }
 
     Ok(())
 }
