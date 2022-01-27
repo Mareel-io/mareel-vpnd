@@ -105,8 +105,6 @@ impl PlatformRoute for Route {
             .arg("delete")
             .arg("-inet")
             .arg(address)
-            .arg(&self.default_gw.0)
-            .arg(&self.default_gw.1)
             .output()
         {
             Ok(_) => {
