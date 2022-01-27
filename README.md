@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2022 Empo Inc.
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# mareel-VPN
+# mareel-vpnd
 A REST-API server for WireGuard® configuration, designed for Mareel VPN
 
 # Usage
