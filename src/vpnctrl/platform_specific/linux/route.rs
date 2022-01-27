@@ -83,6 +83,14 @@ impl PlatformRoute for Route {
         Ok(())
     }
 
+    fn remove_route_bypass(&mut self, _address: &str) -> Result<(), VpnctrlError> {
+        Ok(())
+    }
+
+    fn get_route_bypass(&self) -> Result<Vec<String>, VpnctrlError> {
+        Ok(vec![])
+    }
+
     fn backup_default_route(&mut self) -> Result<(), VpnctrlError> {
         // No need for this. fwmark will handle clutter for us
         Ok(())

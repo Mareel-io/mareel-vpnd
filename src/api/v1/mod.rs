@@ -21,6 +21,7 @@ use types::{DaemonControlMessage, InterfaceStore};
 
 mod interface;
 mod peer;
+mod route;
 mod types;
 
 #[post("/shutdown", format = "json", data = "<magic>")]
@@ -172,6 +173,9 @@ pub(crate) fn stage() -> AdHoc {
                     peer::get_peer,
                     //peer::update_peer,
                     peer::delete_peer,
+                    route::create_bypass,
+                    route::get_bypass,
+                    route::delete_bypass,
                     prometheus,
                 ],
             )

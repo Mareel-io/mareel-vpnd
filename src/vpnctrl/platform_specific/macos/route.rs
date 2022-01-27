@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::process::Command;
 
 use super::super::common::PlatformRoute;
@@ -9,7 +10,7 @@ use wireguard_control::InterfaceName;
 pub struct Route {
     default_gw: (String, String),
     default_route_removed: bool,
-    route_bypass_list: Vec<String>,
+    route_bypass_set: HashSet<String>,
 }
 
 impl PlatformRoute for Route {
@@ -20,7 +21,7 @@ impl PlatformRoute for Route {
         Ok(Self {
             default_gw: ("".to_string(), "".to_string()),
             default_route_removed: false,
-            route_bypass_list: vec![],
+            route_bypass_set: HashSet::new(),
         })
     }
 
@@ -86,11 +87,36 @@ impl PlatformRoute for Route {
             .output()
         {
             Ok(_) => {
-                self.route_bypass_list.push(address.to_string());
+                self.route_bypass_set.insert(address.to_string());
                 Ok(())
             }
             Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
         }
+    }
+
+    fn remove_route_bypass(&mut self, address: &str) -> Result<(), VpnctrlError> {
+        if !self.route_bypass_set.contains(address) {
+            return Ok(());
+        }
+
+        match Command::new("route")
+            .arg("-q")
+            .arg("-n")
+            .arg("delete")
+            .arg("-inet")
+            .arg(address)
+            .output()
+        {
+            Ok(_) => {
+                self.route_bypass_set.insert(address.to_string());
+                Ok(())
+            }
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
+        }
+    }
+
+    fn get_route_bypass(&self) -> Result<Vec<String>, VpnctrlError> {
+        Ok(self.route_bypass_set.iter().cloned().collect())
     }
 
     fn backup_default_route(&mut self) -> Result<(), VpnctrlError> {
@@ -181,7 +207,7 @@ impl PlatformRoute for Route {
 
 impl Route {
     fn cleanup_route_bypass(&mut self) {
-        for addr in self.route_bypass_list.iter() {
+        for addr in self.route_bypass_set.iter() {
             Command::new("route")
                 .arg("-q")
                 .arg("-n")
@@ -192,7 +218,7 @@ impl Route {
                 .ok();
         }
 
-        self.route_bypass_list = vec![];
+        self.route_bypass_set = HashSet::new();
     }
 
     fn get_real_ifname(alias: &str) -> Result<String, VpnctrlError> {
