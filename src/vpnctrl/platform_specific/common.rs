@@ -69,6 +69,8 @@ pub trait PlatformRoute {
     fn add_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError>;
     fn remove_route(&mut self, ifname: &str, cidr: &str) -> Result<(), VpnctrlError>;
     fn add_route_bypass(&mut self, address: &str) -> Result<(), VpnctrlError>;
+    fn remove_route_bypass(&mut self, address: &str) -> Result<(), VpnctrlError>;
+    fn get_route_bypass(&self) -> Result<Vec<String>, VpnctrlError>;
     fn backup_default_route(&mut self) -> Result<(), VpnctrlError>;
     fn remove_default_route(&mut self) -> Result<(), VpnctrlError>;
     fn restore_default_route(&mut self) -> Result<(), VpnctrlError>;
