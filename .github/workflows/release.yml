@@ -20,7 +20,7 @@ jobs:
           - [macos-latest, [x86_64-apple-darwin, aarch64-apple-darwin]]
         clang: [["13.0", "clang_13_0"]]
     env:
-      RUSTFLAGS: "-C target-feature=+crt-static"
+      RUSTFLAGS: "-C target-feature=-crt-static"
     steps:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
