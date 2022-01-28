@@ -22,3 +22,5 @@ pub mod route;
 
 pub use interface::*;
 pub use route::*;
+
+pub mod dns;
