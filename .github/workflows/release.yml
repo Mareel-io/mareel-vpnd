@@ -36,7 +36,7 @@ jobs:
       - name:  Install libdbus-1
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
-                    sudo apt install -y pkg-config libdbus-1-dev libsystemd-dev 
+                    sudo apt install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev 
                else
                     echo "This platform does not require libdbus."
                fi
