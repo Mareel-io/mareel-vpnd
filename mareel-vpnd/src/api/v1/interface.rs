@@ -22,10 +22,10 @@ use std::convert::TryInto;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType, PrometheusStore};
-use crate::vpnctrl::platform_specific::common::{
+use wgctrl::platform_specific::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, PlatformRoute, WgIfCfg,
 };
-use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
+use wgctrl::platform_specific::PlatformSpecificFactory;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};

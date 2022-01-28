@@ -29,8 +29,8 @@ use rocket::{serde, Shutdown, State};
 use rocket_client_addr::ClientAddr;
 
 use crate::api::tokenauth::ApiKey;
-use crate::vpnctrl::platform_specific::common::PlatformRoute;
-use crate::vpnctrl::platform_specific::PlatformSpecificFactory;
+use wgctrl::platform_specific::common::PlatformRoute;
+use wgctrl::platform_specific::PlatformSpecificFactory;
 
 use self::types::{IpStore, RouteManagerStore};
 

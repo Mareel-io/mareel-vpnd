@@ -1,0 +1,47 @@
+[package]
+name = "wgctrl"
+version = "0.1.0"
+edition = "2018"
+authors = ["Empo Inc."]
+license = "GPL-3.0-or-later"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default=[]
+
+[dependencies]
+base64 = "0.13"
+custom_error = "1.9.2"
+serde = "1.0.131"
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
+log = "0.4.14"
+#ipnet = "2.3"
+#rocket-client-addr = "0.5.0"
+#lazy_static = "1.4.0"
+#clap = { version = "3.0.0-rc.0", features = ["derive"] }
+#toml = "0.5.8"
+#shell-escape = "0.1.5"
+#regex = "1.5.4"
+#dashmap = "5.0.0"
+#prometheus = { version = "0.13.0", features = ["process"] }
+#curve25519-dalek = "3.2.0"
+#argon2 = "0.3.2"
+#rand_core = { version = "0.6", features = ["std"] }
+#reqwest = { version = "0.11", features = ["json"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+wireguard-control = "1.5.0"
+ipnetwork = "0.18.0"
+netlink-sys = "0.7.0"
+netlink-packet-route = "0.8.0"
+netlink-packet-core = "0.2.4"
+libc = "0.2.111"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+wireguard-control = "1.5.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+wireguard-nt = { git = "https://github.com/Mareel-io/wireguard-nt", branch = "mareel" }
+winapi = { version = "0.3", features = ["ws2def", "netioapi", "nldef", "winerror"] }
+windows-service = "0.4.0"
+libloading = "0.7"

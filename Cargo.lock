@@ -248,16 +248,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "codespan-reporting"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3538270d33cc669650c4b093848450d380def10c331d38c768e34cac80576e6e"
-dependencies = [
- "termcolor",
- "unicode-width",
-]
-
-[[package]]
 name = "const_fn"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -339,50 +329,6 @@ name = "custom_error"
 version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f8a51dd197fa6ba5b4dc98a990a43cc13693c23eb0089ebb0fcc1f04152bca6"
-
-[[package]]
-name = "cxx"
-version = "1.0.63"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c949f4e2576a655698463c56dbc5c5ea4c00964becc9adb0458baa943e862a5b"
-dependencies = [
- "cc",
- "cxxbridge-flags",
- "cxxbridge-macro",
- "link-cplusplus",
-]
-
-[[package]]
-name = "cxx-build"
-version = "1.0.63"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "618f85c8f132bd8912aab124e15a38adc762bb7e3cef84524adde1692ef3e8bc"
-dependencies = [
- "cc",
- "codespan-reporting",
- "once_cell",
- "proc-macro2",
- "quote",
- "scratch",
- "syn",
-]
-
-[[package]]
-name = "cxxbridge-flags"
-version = "1.0.63"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b44dad556b0c83d86676135d6c684bdc2b1b9a1188052dd1cb5998246163536"
-
-[[package]]
-name = "cxxbridge-macro"
-version = "1.0.63"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acc9305a8b69bc2308c2e17dbb98debeac984cdc89ac550c01507cc129433c3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "dashmap"
@@ -892,27 +838,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keytar"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d361c55fba09829ac620b040f5425bf239b1030c3d6820a84acac8da867dca4d"
-dependencies = [
- "keytar-sys",
-]
-
-[[package]]
-name = "keytar-sys"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe908c6896705a1cb516cd6a5d956c63f08d95ace81b93253a98cd93e1e6a65a"
-dependencies = [
- "cc",
- "cxx",
- "cxx-build",
- "pkg-config",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -947,15 +872,6 @@ checksum = "efbc0f03f9a775e9f6aed295c6a1ba2253c5757a9e03d55c6caa46a681abcddd"
 dependencies = [
  "cfg-if",
  "winapi",
-]
-
-[[package]]
-name = "link-cplusplus"
-version = "1.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8cae2cd7ba2f3f63938b9c724475dfb7b9861b545a90324476324ed21dbc8c8"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -1002,15 +918,8 @@ dependencies = [
  "custom_error",
  "dashmap",
  "ipnet",
- "ipnetwork",
- "keytar",
  "lazy_static",
- "libc",
- "libloading",
  "log",
- "netlink-packet-core",
- "netlink-packet-route",
- "netlink-sys",
  "prometheus",
  "rand_core 0.6.3",
  "regex",
@@ -1020,10 +929,7 @@ dependencies = [
  "serde",
  "shell-escape",
  "toml",
- "winapi",
- "windows-service",
- "wireguard-control",
- "wireguard-nt",
+ "wgctrl",
 ]
 
 [[package]]
@@ -1745,12 +1651,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
-name = "scratch"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96311ef4a16462c757bb6a39152c40f58f31cd2602a40fceb937e2bc34e6cbab"
-
-[[package]]
 name = "security-framework"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2325,12 +2225,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unicode-width"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
-
-[[package]]
 name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2456,6 +2350,27 @@ checksum = "c060b319f29dd25724f09a2ba1418f142f539b2be99fbf4d2d5a8f7330afb8eb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "wgctrl"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "custom_error",
+ "ipnetwork",
+ "libc",
+ "libloading",
+ "log",
+ "netlink-packet-core",
+ "netlink-packet-route",
+ "netlink-sys",
+ "rocket",
+ "serde",
+ "winapi",
+ "windows-service",
+ "wireguard-control",
+ "wireguard-nt",
 ]
 
 [[package]]

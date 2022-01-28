@@ -19,7 +19,7 @@
 
 use custom_error::custom_error;
 
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 custom_error! {pub PlatformError
     VpnctrlError{source: VpnctrlError} = "VpnctrlError",
@@ -59,9 +59,9 @@ impl ToString for InterfaceStatus {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct PeerTrafficStat {
-    pub(crate) pubkey: String,
-    pub(crate) rx_bytes: u64,
-    pub(crate) tx_bytes: u64,
+    pub pubkey: String,
+    pub rx_bytes: u64,
+    pub tx_bytes: u64,
 }
 
 pub trait PlatformInterface {

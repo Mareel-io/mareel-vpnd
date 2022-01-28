@@ -34,7 +34,7 @@ use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg, WgPeerCfg,
 };
 
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 pub struct Interface {
     ifname: InterfaceName,

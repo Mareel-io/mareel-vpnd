@@ -17,8 +17,36 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod error;
-pub(crate) mod platform_specific;
+use self::common::{PlatformInterface, PlatformRoute};
+
+// Platform common
+pub mod common;
+
+#[cfg(target_os = "windows")]
+mod windows;
+#[cfg(target_os = "windows")]
+pub use windows::*;
+
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(target_os = "macos")]
+pub use macos::*;
 
 #[cfg(target_os = "linux")]
-mod netlink;
+mod linux;
+#[cfg(target_os = "linux")]
+pub use linux::*;
+
+use super::error::VpnctrlError;
+
+pub struct PlatformSpecificFactory;
+
+impl PlatformSpecificFactory {
+    pub fn get_interface(name: &str) -> Result<Interface, VpnctrlError> {
+        Interface::new(name)
+    }
+
+    pub fn get_route(fwmark: u32) -> Result<Route, VpnctrlError> {
+        Route::new(fwmark)
+    }
+}

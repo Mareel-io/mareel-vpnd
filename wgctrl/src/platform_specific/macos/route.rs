@@ -26,7 +26,7 @@ use std::collections::HashSet;
 use std::process::Command;
 
 use super::super::common::PlatformRoute;
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 use wireguard_control::backends::userspace::resolve_tun;
 
 use wireguard_control::InterfaceName;

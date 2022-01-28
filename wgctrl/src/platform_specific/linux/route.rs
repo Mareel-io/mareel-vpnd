@@ -21,8 +21,8 @@ use ipnetwork::IpNetwork;
 use wireguard_control::InterfaceName;
 
 use super::super::common::PlatformRoute;
-use crate::vpnctrl::error::VpnctrlError;
-use crate::vpnctrl::netlink;
+use crate::error::VpnctrlError;
+use crate::netlink;
 
 pub struct Route {
     fwmark: u32,
