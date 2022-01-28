@@ -22,13 +22,13 @@ use std::convert::TryInto;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType, PrometheusStore};
+use rocket::serde::json::Json;
+use rocket::State;
+use rocket::{http::Status, serde};
 use wgctrl::platform_specific::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, PlatformRoute, WgIfCfg,
 };
 use wgctrl::platform_specific::PlatformSpecificFactory;
-use rocket::serde::json::Json;
-use rocket::State;
-use rocket::{http::Status, serde};
 
 // Raw crypto primitives
 use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
