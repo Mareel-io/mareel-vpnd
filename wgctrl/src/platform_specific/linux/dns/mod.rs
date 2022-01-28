@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+pub(self) mod iface;
 mod network_manager;
 mod resolvconf;
 mod static_resolv_conf;
 pub(self) mod systemd_resolved;
-pub(self) mod iface;
 
 use self::{
     network_manager::NetworkManager, resolvconf::Resolvconf, static_resolv_conf::StaticResolvConf,
@@ -158,8 +158,9 @@ impl DnsMonitorHolder {
             StaticResolvConf(ref mut static_resolv_conf) => {
                 static_resolv_conf.set_dns(servers.to_vec())?
             }
-            SystemdResolved(ref mut systemd_resolved) => handle
-                .block_on(systemd_resolved.set_dns(interface, &servers))?,
+            SystemdResolved(ref mut systemd_resolved) => {
+                handle.block_on(systemd_resolved.set_dns(interface, &servers))?
+            }
             NetworkManager(ref mut network_manager) => {
                 network_manager.set_dns(interface, servers)?
             }
@@ -183,6 +184,5 @@ impl DnsMonitorHolder {
 
 /// Returns true if DnsMonitor will use NetworkManager to manage DNS.
 pub fn will_use_nm() -> bool {
-    SystemdResolved::new().is_err()
-        && NetworkManager::new().is_ok()
+    SystemdResolved::new().is_err() && NetworkManager::new().is_ok()
 }

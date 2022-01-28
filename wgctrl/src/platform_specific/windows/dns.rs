@@ -20,8 +20,8 @@
 
 use crate::ffi_error;
 
-use super::winlog::{log_sink, LogSink};
 use super::luid::luid_from_alias;
+use super::winlog::{log_sink, LogSink};
 
 use lazy_static::lazy_static;
 use std::{env, io, net::IpAddr, path::Path};
@@ -73,7 +73,7 @@ pub struct DnsMonitor {}
 impl super::super::common::DnsMonitorT for DnsMonitor {
     type Error = Error;
 
-    fn new() -> Result<Self, Error> {
+    fn new(_handle: tokio::runtime::Handle) -> Result<Self, Error> {
         unsafe { WinDns_Initialize(Some(log_sink), b"WinDns\0".as_ptr()).into_result()? };
 
         let mut monitor = DnsMonitor {};

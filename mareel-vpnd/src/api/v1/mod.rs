@@ -32,7 +32,7 @@ use crate::api::tokenauth::ApiKey;
 use wgctrl::platform_specific::common::PlatformRoute;
 use wgctrl::platform_specific::PlatformSpecificFactory;
 
-use self::types::{IpStore, RouteManagerStore};
+use self::types::{DnsMonStore, IpStore, RouteManagerStore};
 
 use super::common::{ApiResponse, ApiResponseType, PrometheusStore};
 
@@ -204,6 +204,12 @@ pub(crate) fn stage() -> AdHoc {
             .manage(RouteManagerStore {
                 route_manager: Mutex::new(route_manager),
                 route_store: DashMap::new(),
+            })
+            .manage(DnsMonStore {
+                dnsmon: Mutex::new(
+                    PlatformSpecificFactory::get_dnsmon(rocket::tokio::runtime::Handle::current())
+                        .unwrap(),
+                ),
             })
             .manage(IpStore {
                 v4: DashSet::new(),

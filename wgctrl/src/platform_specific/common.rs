@@ -96,7 +96,6 @@ pub trait PlatformRoute {
     fn restore_default_route(&mut self) -> Result<(), VpnctrlError>;
 }
 
-
 // Imported from Mullvad talpid-core
 use std::net::IpAddr;
 
@@ -118,14 +117,9 @@ pub struct DnsMonitor {
 
 impl DnsMonitor {
     /// Returns a new `DnsMonitor` that can set and monitor the system DNS.
-    pub fn new(
-        #[cfg(target_os = "linux")] handle: tokio::runtime::Handle,
-    ) -> Result<Self, Error> {
+    pub fn new(handle: tokio::runtime::Handle) -> Result<Self, Error> {
         Ok(DnsMonitor {
-            inner: dns::DnsMonitor::new(
-                #[cfg(target_os = "linux")]
-                handle,
-            )?,
+            inner: dns::DnsMonitor::new(handle)?,
         })
     }
 
@@ -160,16 +154,9 @@ impl DnsMonitor {
 pub trait DnsMonitorT: Sized {
     type Error: std::error::Error;
 
-    #[cfg(target_os = "linux")]
-    fn new(
-        handle: tokio::runtime::Handle,
-    ) -> Result<Self, Self::Error>;
-
-    #[cfg(not(target_os = "linux"))]
-    fn new() -> Result<Self, Self::Error>;
+    fn new(handle: tokio::runtime::Handle) -> Result<Self, Self::Error>;
 
     fn set(&mut self, interface: &str, servers: &[IpAddr]) -> Result<(), Self::Error>;
 
     fn reset(&mut self) -> Result<(), Self::Error>;
 }
-

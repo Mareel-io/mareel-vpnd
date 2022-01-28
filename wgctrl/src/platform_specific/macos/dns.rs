@@ -235,7 +235,7 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
     /// DNS settings for all network interfaces. If any changes occur it will instantly reset
     /// the DNS settings for that interface back to the last server list set to this instance
     /// with `set_dns`.
-    fn new() -> Result<Self> {
+    fn new(_handle: tokio::runtime::Handle) -> Result<Self> {
         let state = Arc::new(Mutex::new(None));
         Self::spawn(state.clone())?;
         Ok(DnsMonitor {

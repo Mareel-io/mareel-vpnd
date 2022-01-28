@@ -21,19 +21,16 @@
 use std::{
     ffi::{OsStr, OsString},
     io,
-    os::windows::{
-        ffi::{OsStrExt, OsStringExt},
-    },
-    time::{Duration},
+    os::windows::ffi::{OsStrExt, OsStringExt},
+    time::Duration,
 };
 use winapi::shared::{
     ifdef::NET_LUID,
     netioapi::{ConvertInterfaceAliasToLuid, ConvertInterfaceLuidToAlias},
-    ntddndis::NDIS_IF_MAX_STRING_SIZE,
-    winerror::{NO_ERROR},
     nldef::NL_DAD_STATE,
-    ws2def::{
-        AF_INET, AF_INET6},
+    ntddndis::NDIS_IF_MAX_STRING_SIZE,
+    winerror::NO_ERROR,
+    ws2def::{AF_INET, AF_INET6},
 };
 
 /// Result type for this module.
@@ -124,7 +121,6 @@ pub enum AddressFamily {
     /// IPv6 address family
     Ipv6 = AF_INET6 as isize,
 }
-
 
 /// Returns the LUID of an interface given its alias.
 pub fn luid_from_alias<T: AsRef<OsStr>>(alias: T) -> io::Result<NET_LUID> {

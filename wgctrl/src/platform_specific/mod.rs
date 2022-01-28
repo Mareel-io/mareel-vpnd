@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use self::common::{PlatformInterface, PlatformRoute};
+use self::common::{DnsMonitor, PlatformInterface, PlatformRoute};
 
 // Platform common
 pub mod common;
@@ -48,5 +48,12 @@ impl PlatformSpecificFactory {
 
     pub fn get_route(fwmark: u32) -> Result<Route, VpnctrlError> {
         Route::new(fwmark)
+    }
+
+    pub fn get_dnsmon(handle: tokio::runtime::Handle) -> Result<DnsMonitor, VpnctrlError> {
+        match DnsMonitor::new(handle) {
+            Ok(x) => Ok(x),
+            Err(e) => Err(VpnctrlError::Internal { msg: e.to_string() }),
+        }
     }
 }

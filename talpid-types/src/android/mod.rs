@@ -18,7 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 use jnix::jni::{objects::GlobalRef, JavaVM};
 use std::sync::Arc;
 

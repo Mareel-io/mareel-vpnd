@@ -25,7 +25,7 @@ use std::{
 use dashmap::{DashMap, DashSet};
 use prometheus::Counter;
 
-use wgctrl::platform_specific::common::PlatformInterface;
+use wgctrl::platform_specific::common::{DnsMonitor, PlatformInterface};
 use wgctrl::platform_specific::Route;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -97,4 +97,8 @@ pub(crate) struct IpStore {
 pub(crate) struct RouteManagerStore {
     pub route_manager: Mutex<Box<Route>>,
     pub route_store: DashMap<String, HashMap<String, bool>>,
+}
+
+pub(crate) struct DnsMonStore {
+    pub dnsmon: Mutex<DnsMonitor>,
 }

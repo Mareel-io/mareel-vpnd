@@ -18,7 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 /// Creates a new result type that returns the given result variant on error.
 #[macro_export]
 macro_rules! ffi_error {
