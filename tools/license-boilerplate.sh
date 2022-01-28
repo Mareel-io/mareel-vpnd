@@ -12,6 +12,7 @@ if [ "$?" != 0 ]; then
     echo "Reuse is not installed on system"
     echo "Please install reuse on your system"
     echo "Using this guide: https://github.com/fsfe/reuse-tool#install"
+    exit -1
 fi
 
 
