@@ -16,10 +16,14 @@ if [ "$?" != 0 ]; then
 fi
 
 
-# Rust header
+# License boilerplate for mareel-vpnd
 SRCS=$(find ./mareel-vpnd -name "*.rs")
+reuse addheader --style c --copyright "Empo Inc." --template mareel-rust --license "GPL-3.0-or-later" $SRCS
+
+# License boilerplate for wgctrl
+SRCS=$(find ./wgctrl -name "*.rs")
 reuse addheader --style c --copyright "Empo Inc." --template mareel-rust --license "GPL-3.0-or-later" $SRCS
 
 # Boilerplate for talpid-dbus
 SRCS=$(find ./talpid-dbus -name "*.rs")
-reuse addheader --style c --copyright "Mullvad VPN AB" --template mareel-rust --license "GPL-3.0-or-later" $SRCS
+reuse addheader --style c --copyright "Empo Inc." --template mareel-rust --license "GPL-3.0-or-later" $SRCS

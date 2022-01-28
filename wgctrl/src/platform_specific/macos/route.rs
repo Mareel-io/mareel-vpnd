@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
+ * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
