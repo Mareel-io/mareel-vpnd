@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi_error;
+//use crate::ffi_error;
 
 use super::luid::luid_from_alias;
 use super::winlog::{log_sink, LogSink};
@@ -74,7 +74,7 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
     type Error = Error;
 
     fn new(_handle: tokio::runtime::Handle) -> Result<Self, Error> {
-        unsafe { WinDns_Initialize(Some(log_sink), b"WinDns\0".as_ptr()).into_result()? };
+        //unsafe { WinDns_Initialize(Some(log_sink), b"WinDns\0".as_ptr()).into_result()? };
 
         let mut monitor = DnsMonitor {};
         monitor.reset()?;
@@ -109,14 +109,15 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
         let luid = luid_from_alias(interface).map_err(Error::InterfaceLuidError)?;
 
         unsafe {
-            WinDns_Set(
-                &luid,
-                ipv4_address_ptrs.as_mut_ptr(),
-                ipv4_address_ptrs.len() as u32,
-                ipv6_address_ptrs.as_mut_ptr(),
-                ipv6_address_ptrs.len() as u32,
-            )
-            .into_result()
+            //WinDns_Set(
+            //    &luid,
+            //    ipv4_address_ptrs.as_mut_ptr(),
+            //    ipv4_address_ptrs.len() as u32,
+            //    ipv6_address_ptrs.as_mut_ptr(),
+            //    ipv6_address_ptrs.len() as u32,
+            //)
+            //.into_result()
+            Ok(())
         }?;
 
         if *GLOBAL_DNS_CACHE_POLICY {
@@ -153,7 +154,7 @@ impl Drop for DnsMonitor {
             }
         }
 
-        if unsafe { WinDns_Deinitialize().into_result().is_ok() } {
+        if unsafe { true } { //WinDns_Deinitialize().into_result().is_ok() } {
             log::trace!("Successfully deinitialized WinDns");
         } else {
             log::error!("Failed to deinitialize WinDns");
@@ -228,31 +229,31 @@ fn reset_dns_cache_policy() -> Result<(), Error> {
     }
 }
 
-ffi_error!(InitializationResult, Error::Initialization);
-ffi_error!(DeinitializationResult, Error::Deinitialization);
-ffi_error!(SettingResult, Error::Setting);
+//ffi_error!(InitializationResult, Error::Initialization);
+//ffi_error!(DeinitializationResult, Error::Deinitialization);
+//ffi_error!(SettingResult, Error::Setting);
 
-#[allow(non_snake_case)]
-extern "stdcall" {
-    #[link_name = "WinDns_Initialize"]
-    pub fn WinDns_Initialize(
-        sink: Option<LogSink>,
-        sink_context: *const u8,
-    ) -> InitializationResult;
-
-    // WinDns_Deinitialize:
-    //
-    // Call this function once before unloading WINDNS or exiting the process.
-    #[link_name = "WinDns_Deinitialize"]
-    pub fn WinDns_Deinitialize() -> DeinitializationResult;
-
-    // Configure which DNS servers should be used and start enforcing these settings.
-    #[link_name = "WinDns_Set"]
-    pub fn WinDns_Set(
-        interface_luid: *const NET_LUID,
-        v4_ips: *mut *const u16,
-        v4_n_ips: u32,
-        v6_ips: *mut *const u16,
-        v6_n_ips: u32,
-    ) -> SettingResult;
-}
+//#[allow(non_snake_case)]
+//extern "stdcall" {
+//    #[link_name = "WinDns_Initialize"]
+//    pub fn WinDns_Initialize(
+//        sink: Option<LogSink>,
+//        sink_context: *const u8,
+//    ) -> InitializationResult;
+//
+//    // WinDns_Deinitialize:
+//    //
+//    // Call this function once before unloading WINDNS or exiting the process.
+//    #[link_name = "WinDns_Deinitialize"]
+//    pub fn WinDns_Deinitialize() -> DeinitializationResult;
+//
+//    // Configure which DNS servers should be used and start enforcing these settings.
+//    #[link_name = "WinDns_Set"]
+//    pub fn WinDns_Set(
+//        interface_luid: *const NET_LUID,
+//        v4_ips: *mut *const u16,
+//        v4_n_ips: u32,
+//        v6_ips: *mut *const u16,
+//        v6_n_ips: u32,
+//    ) -> SettingResult;
+//}
