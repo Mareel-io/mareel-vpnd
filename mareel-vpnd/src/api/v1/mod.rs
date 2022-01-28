@@ -194,6 +194,7 @@ pub(crate) fn stage() -> AdHoc {
                     interface::delete_routes,
                     interface::get_trafficstat,
                     interface::put_dns,
+                    interface::delete_dns,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,

@@ -522,3 +522,32 @@ pub(crate) async fn put_dns(
         ),
     }
 }
+
+#[delete("/interface/<id>/dns")]
+pub(crate) async fn delete_dns(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    dns_store: &State<DnsMonStore>,
+    id: String,
+) -> ApiResponseType<String> {
+    match iface_store.iface_states.get(&id) {
+        Some(x) => {
+            drop(x);
+        }
+        None => {
+            return (Status::NotFound, ApiResponse::err(-1, "Not found"));
+        }
+    };
+
+    let dnsmon_lock = dns_store.dnsmon.clone();
+    match rocket::tokio::task::spawn_blocking(move || {
+        let mut dnsmon = dnsmon_lock.lock().unwrap();
+        dnsmon.reset()
+     }).await {
+        Ok(_) => (Status::Ok, ApiResponse::ok("ok".to_string())),
+        Err(e) => (
+            Status::InternalServerError,
+            ApiResponse::err(-1, &e.to_string()),
+        ),
+    }
+}
