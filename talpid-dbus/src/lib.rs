@@ -1,4 +1,3 @@
-#![cfg(target_os = "linux")]
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
  * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
@@ -19,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#![cfg(target_os = "linux")]
 //! DBus system connection
 pub use dbus;
 use dbus::blocking::SyncConnection;
