@@ -21,16 +21,14 @@ use prometheus::{Counter, Opts};
 use regex::Regex;
 use rocket::{http::Status, serde::json::Json, State};
 
-use crate::{
-    api::{
-        common::{ApiResponse, ApiResponseType, PrometheusStore},
-        v1::{
-            types::{IpStore, RouteManagerStore},
-            InterfaceStore,
-        },
+use crate::api::{
+    common::{ApiResponse, ApiResponseType, PrometheusStore},
+    v1::{
+        types::{IpStore, RouteManagerStore},
+        InterfaceStore,
     },
-    vpnctrl::platform_specific::common::{PlatformRoute, WgPeerCfg},
 };
+use wgctrl::platform_specific::common::{PlatformRoute, WgPeerCfg};
 
 use super::types::PeerConfig;
 use crate::api::tokenauth::ApiKey;

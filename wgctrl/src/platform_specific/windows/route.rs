@@ -18,7 +18,7 @@
  */
 
 use super::super::common::PlatformRoute;
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 pub struct Route {}
 

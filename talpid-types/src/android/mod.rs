@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
+ * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -17,8 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod error;
-pub(crate) mod platform_specific;
+use jnix::jni::{objects::GlobalRef, JavaVM};
+use std::sync::Arc;
 
-#[cfg(target_os = "linux")]
-mod netlink;
+#[derive(Clone)]
+pub struct AndroidContext {
+    pub jvm: Arc<JavaVM>,
+    pub vpn_service: GlobalRef,
+}

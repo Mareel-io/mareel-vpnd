@@ -18,7 +18,7 @@
  */
 
 pub mod interface;
-pub mod route;
-
 pub use interface::*;
+pub mod route;
 pub use route::*;
+pub mod dns;

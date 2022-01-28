@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
+ * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -19,7 +20,7 @@
 
 use custom_error::custom_error;
 
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 custom_error! {pub PlatformError
     VpnctrlError{source: VpnctrlError} = "VpnctrlError",
@@ -59,9 +60,9 @@ impl ToString for InterfaceStatus {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct PeerTrafficStat {
-    pub(crate) pubkey: String,
-    pub(crate) rx_bytes: u64,
-    pub(crate) tx_bytes: u64,
+    pub pubkey: String,
+    pub rx_bytes: u64,
+    pub tx_bytes: u64,
 }
 
 pub trait PlatformInterface {
@@ -93,4 +94,69 @@ pub trait PlatformRoute {
     fn backup_default_route(&mut self) -> Result<(), VpnctrlError>;
     fn remove_default_route(&mut self) -> Result<(), VpnctrlError>;
     fn restore_default_route(&mut self) -> Result<(), VpnctrlError>;
+}
+
+// Imported from Mullvad talpid-core
+use std::net::IpAddr;
+
+#[cfg(target_os = "linux")]
+use super::super::platform_specific::linux::dns;
+
+#[cfg(target_os = "macos")]
+use super::super::platform_specific::macos::dns;
+
+#[cfg(windows)]
+use super::super::platform_specific::windows::dns;
+
+pub use dns::Error;
+
+/// Sets and monitors system DNS settings. Makes sure the desired DNS servers are being used.
+pub struct DnsMonitor {
+    inner: dns::DnsMonitor,
+}
+
+impl DnsMonitor {
+    /// Returns a new `DnsMonitor` that can set and monitor the system DNS.
+    pub fn new(handle: tokio::runtime::Handle) -> Result<Self, Error> {
+        Ok(DnsMonitor {
+            inner: dns::DnsMonitor::new(handle)?,
+        })
+    }
+
+    /// Returns a map of interfaces and respective list of resolvers that don't contain our
+    /// changes.
+    #[cfg(target_os = "macos")]
+    pub fn get_system_config(&self) -> Result<Option<(String, Vec<IpAddr>)>, Error> {
+        self.inner.get_system_config()
+    }
+
+    /// Set DNS to the given servers. And start monitoring the system for changes.
+    pub fn set(&mut self, interface: &str, servers: &[IpAddr]) -> Result<(), Error> {
+        log::info!(
+            "Setting DNS servers to {}",
+            servers
+                .iter()
+                .map(|ip| ip.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+        self.inner.set(interface, servers)
+    }
+
+    /// Reset system DNS settings to what it was before being set by this instance.
+    /// This succeeds if the interface does not exist.
+    pub fn reset(&mut self) -> Result<(), Error> {
+        log::info!("Resetting DNS");
+        self.inner.reset()
+    }
+}
+
+pub trait DnsMonitorT: Sized {
+    type Error: std::error::Error;
+
+    fn new(handle: tokio::runtime::Handle) -> Result<Self, Self::Error>;
+
+    fn set(&mut self, interface: &str, servers: &[IpAddr]) -> Result<(), Self::Error>;
+
+    fn reset(&mut self) -> Result<(), Self::Error>;
 }

@@ -1,4 +1,5 @@
 /*
+ * SPDX-FileCopyrightText: 2022 Empo Inc.
  * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -75,7 +76,7 @@ const MINIMUM_SUPPORTED_MINOR_VERSION: u32 = 16;
 const MAXIMUM_SUPPORTED_MAJOR_VERSION: u32 = 1;
 const MAXIMUM_SUPPORTED_MINOR_VERSION: u32 = 26;
 
-const NM_DEVICE_STATE_CHANGED: &'static str = "StateChanged";
+const NM_DEVICE_STATE_CHANGED: &str = "StateChanged";
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -174,10 +175,10 @@ impl NetworkManager {
     }
 
     fn create_wg_tunnel_inner(&self, config: &DeviceConfig) -> Result<WireguardTunnel> {
-        let config_path: dbus::Path<'static> = match self.add_connection_2(&config) {
+        let config_path: dbus::Path<'static> = match self.add_connection_2(config) {
             Ok((path, _result)) => path,
             Err(Error::Dbus(dbus_error)) if dbus_error.name() == Some(DBUS_UNKNOWN_METHOD) => {
-                self.add_connection_unsaved(&config)?.0
+                self.add_connection_unsaved(config)?.0
             }
             Err(err) => {
                 log::error!(
@@ -257,7 +258,7 @@ impl NetworkManager {
     }
 
     fn parse_nm_version(version: &str) -> Option<(u32, u32)> {
-        let mut parts = version.split(".").map(|part| part.parse().ok());
+        let mut parts = version.split('.').map(|part| part.parse().ok());
 
         let major_version: u32 = parts.next()??;
         let minor_version: u32 = parts.next()??;
@@ -401,7 +402,7 @@ impl NetworkManager {
     pub fn ensure_network_manager_exists(&self) -> Result<()> {
         match self
             .as_manager()
-            .get::<Box<dyn RefArg>>(&NM_MANAGER, "Version")
+            .get::<Box<dyn RefArg>>(NM_MANAGER, "Version")
         {
             Ok(_) => Ok(()),
             Err(err) => {
@@ -553,7 +554,7 @@ impl NetworkManager {
             .filter_map(|server| {
                 match server {
                     // Network-byte order
-                    IpAddr::V4(server) => Some(u32::to_be(server.clone().into())),
+                    IpAddr::V4(server) => Some(u32::to_be((*server).into())),
                     IpAddr::V6(_) => None,
                 }
             })
@@ -629,12 +630,12 @@ impl NetworkManager {
             .as_manager()
             .get(NM_MANAGER, "Devices")
             .map_err(Error::Dbus)?;
-        let mut iter = devices
+        let iter = devices
             .as_iter()
             .ok_or(Error::ObtainDevices)?
             .map(|device| device.box_clone());
 
-        while let Some(device_item) = iter.next() {
+        for device_item in iter {
             // Copy due to lifetime weirdness
             let device_path = device_item
                 .as_any()
@@ -642,7 +643,7 @@ impl NetworkManager {
                 .ok_or(Error::ObtainDevices)?;
 
             let device_name: String = self
-                .as_path(&device_path)
+                .as_path(device_path)
                 .get(NM_DEVICE, "Interface")
                 .map_err(Error::Dbus)?;
 

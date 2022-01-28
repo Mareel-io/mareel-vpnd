@@ -25,8 +25,8 @@ use std::{
 use dashmap::{DashMap, DashSet};
 use prometheus::Counter;
 
-use crate::vpnctrl::platform_specific::common::PlatformInterface;
-use crate::vpnctrl::platform_specific::Route;
+use wgctrl::platform_specific::common::{DnsMonitor, PlatformInterface};
+use wgctrl::platform_specific::Route;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -97,4 +97,8 @@ pub(crate) struct IpStore {
 pub(crate) struct RouteManagerStore {
     pub route_manager: Mutex<Box<Route>>,
     pub route_store: DashMap<String, HashMap<String, bool>>,
+}
+
+pub(crate) struct DnsMonStore {
+    pub dnsmon: Arc<Mutex<DnsMonitor>>,
 }

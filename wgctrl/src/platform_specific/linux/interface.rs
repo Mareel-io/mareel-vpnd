@@ -27,7 +27,7 @@ use wireguard_control::{
 use super::super::common::{
     InterfaceStatus, PeerTrafficStat, PlatformInterface, WgIfCfg, WgPeerCfg,
 };
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 use super::super::super::netlink;
 

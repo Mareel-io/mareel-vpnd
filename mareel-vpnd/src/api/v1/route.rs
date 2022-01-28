@@ -22,7 +22,7 @@ use rocket::{http::Status, State};
 
 use crate::api::common::{ApiResponse, ApiResponseType};
 use crate::api::tokenauth::ApiKey;
-use crate::vpnctrl::platform_specific::common::PlatformRoute;
+use wgctrl::platform_specific::common::PlatformRoute;
 
 use super::types::RouteManagerStore;
 

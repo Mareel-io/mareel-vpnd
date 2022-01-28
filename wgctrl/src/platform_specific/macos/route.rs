@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
+ * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -26,7 +27,7 @@ use std::collections::HashSet;
 use std::process::Command;
 
 use super::super::common::PlatformRoute;
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 use wireguard_control::backends::userspace::resolve_tun;
 
 use wireguard_control::InterfaceName;

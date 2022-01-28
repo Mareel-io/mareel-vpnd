@@ -28,7 +28,7 @@ use ipnet::IpNet;
 
 use super::super::common::{InterfaceStatus, PeerTrafficStat, PlatformInterface, WgPeerCfg};
 
-use crate::vpnctrl::error::VpnctrlError;
+use crate::error::VpnctrlError;
 
 //#[cfg(target_arch = "x86_64")]
 //const DRIVER_DLL_PATH: &str = "./wireguard-nt/bin/amd64/wireguard.dll";

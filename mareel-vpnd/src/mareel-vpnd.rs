@@ -45,7 +45,6 @@ mod api;
 mod config;
 mod svc;
 mod util;
-mod vpnctrl;
 
 use util::svcman::{svc_install, svc_start, svc_stop, svc_uninstall};
 

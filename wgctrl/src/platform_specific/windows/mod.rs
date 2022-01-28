@@ -22,3 +22,9 @@ pub mod route;
 
 pub use interface::*;
 pub use route::*;
+
+pub mod dns;
+
+pub(self) mod ffi;
+pub(self) mod luid;
+pub(self) mod winlog;
