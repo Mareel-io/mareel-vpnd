@@ -85,7 +85,7 @@ jobs:
       - name: Merge dirs
         run: for i in ./artifacts/*; do mv "$i"/* ./bin/; rm -rf "$i"; done
       - name: Add TOML
-        run: cp Cargo.toml ./bin/
+        run: cp mareel-vpnd/Cargo.toml ./bin/mareel-vpnd.toml
       - name: Set perms
         run: find -type f -exec chmod 755 '{}' \;
       - name: Extract Win32 drivers
