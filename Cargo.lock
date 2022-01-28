@@ -2365,6 +2365,7 @@ dependencies = [
  "netlink-packet-core",
  "netlink-packet-route",
  "netlink-sys",
+ "regex",
  "rocket",
  "serde",
  "winapi",
