@@ -36,7 +36,7 @@ jobs:
       - name:  Install libdbus-1
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
-                    apt install -y libdbus-1-dev
+                    sudo apt install -y libdbus-1-dev
                else
                     echo "This platform does not require libdbus."
                fi
