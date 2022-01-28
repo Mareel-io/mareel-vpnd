@@ -27,6 +27,14 @@ jobs:
         with:
           version: ${{ matrix.clang[0] }}
           directory: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}
+      - name:  Install
+        run:   |
+               if [ "$RUNNER_OS" == "Linux" ]; then
+                    apt install -y libdbus-1-dev
+               else
+                    echo "This platform does not require libdbus."
+               fi
+        shell: bash
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Install Rust
