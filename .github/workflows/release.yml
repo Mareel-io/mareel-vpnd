@@ -47,7 +47,7 @@ jobs:
       - name: Build
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
-                    export RUSTFLAGS='-C target-feature=+crt-static'
+                    export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                else
                     cargo build --release --target ${{ matrix.targets[1][0] }}
