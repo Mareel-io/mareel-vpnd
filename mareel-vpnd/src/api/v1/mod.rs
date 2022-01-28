@@ -18,7 +18,7 @@
  */
 
 use std::collections::HashMap;
-use std::sync::{Mutex, RwLock};
+use std::sync::{Mutex, RwLock, Arc};
 
 use ::prometheus::{Encoder, TextEncoder};
 use dashmap::{DashMap, DashSet};
@@ -159,6 +159,12 @@ async fn prometheus(
     (Status::Ok, String::from_utf8(buffer).unwrap())
 }
 
+// TODO: FIXME: Hacky way to integrate talpid anyway
+lazy_static! {
+    static ref TALPID_TOKIO_RT: rocket::tokio::runtime::Runtime =
+        rocket::tokio::runtime::Runtime::new().unwrap();
+}
+
 pub(crate) fn stage() -> AdHoc {
     AdHoc::on_ignite("API v1", |rocket| async {
         let mut route_manager = Box::new(PlatformSpecificFactory::get_route(0x7370616b).unwrap());
@@ -187,6 +193,7 @@ pub(crate) fn stage() -> AdHoc {
                     interface::get_routes,
                     interface::delete_routes,
                     interface::get_trafficstat,
+                    interface::put_dns,
                     peer::create_peer,
                     peer::get_peers,
                     peer::get_peer,
@@ -206,10 +213,9 @@ pub(crate) fn stage() -> AdHoc {
                 route_store: DashMap::new(),
             })
             .manage(DnsMonStore {
-                dnsmon: Mutex::new(
-                    PlatformSpecificFactory::get_dnsmon(rocket::tokio::runtime::Handle::current())
-                        .unwrap(),
-                ),
+                dnsmon: Arc::new(Mutex::new(
+                    PlatformSpecificFactory::get_dnsmon(TALPID_TOKIO_RT.handle().clone()).unwrap(),
+                )),
             })
             .manage(IpStore {
                 v4: DashSet::new(),

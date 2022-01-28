@@ -100,5 +100,5 @@ pub(crate) struct RouteManagerStore {
 }
 
 pub(crate) struct DnsMonStore {
-    pub dnsmon: Mutex<DnsMonitor>,
+    pub dnsmon: Arc<Mutex<DnsMonitor>>,
 }

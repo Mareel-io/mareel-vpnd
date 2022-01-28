@@ -19,9 +19,11 @@
 
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::net::IpAddr;
 use std::sync::{Arc, Mutex};
 
 use crate::api::common::{ApiResponse, ApiResponseType, PrometheusStore};
+use crate::api::v1::types::DnsMonStore;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{http::Status, serde};
@@ -85,6 +87,12 @@ fn test_extract_pubkey_clamp() {
 #[serde(crate = "rocket::serde")]
 pub(crate) struct InterfaceStatusResp {
     pub(crate) status: String,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(crate = "rocket::serde")]
+pub(crate) struct DnsConfigureReq {
+    pub dns: Vec<String>,
 }
 
 #[post("/interface", format = "json", data = "<ifcfg>")]
@@ -472,5 +480,45 @@ pub(crate) async fn get_trafficstat(
             }
         }
         None => (Status::NotFound, ApiResponse::err(-1, "Not found")),
+    }
+}
+
+#[put("/interface/<id>/dns", format = "json", data = "<dns>")]
+pub(crate) async fn put_dns(
+    _apikey: ApiKey,
+    iface_store: &State<InterfaceStore>,
+    dns_store: &State<DnsMonStore>,
+    id: String,
+    dns: Json<DnsConfigureReq>,
+) -> ApiResponseType<String> {
+    match iface_store.iface_states.get(&id) {
+        Some(x) => {
+            drop(x);
+        }
+        None => {
+            return (Status::NotFound, ApiResponse::err(-1, "Not found"));
+        }
+    };
+
+    let dns: Vec<IpAddr> = match dns.dns.iter().map(|e| e.parse()).collect() {
+        Ok(x) => x,
+        Err(e) => {
+            return (
+                Status::UnprocessableEntity,
+                ApiResponse::err(-1, &e.to_string()),
+            );
+        }
+    };
+
+    let dnsmon_lock = dns_store.dnsmon.clone();
+    match rocket::tokio::task::spawn_blocking(move || {
+        let mut dnsmon = dnsmon_lock.lock().unwrap();
+        dnsmon.set(&id, &dns)
+     }).await {
+        Ok(_) => (Status::Ok, ApiResponse::ok("ok".to_string())),
+        Err(e) => (
+            Status::InternalServerError,
+            ApiResponse::err(-1, &e.to_string()),
+        ),
     }
 }
