@@ -44,7 +44,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Build
-        run: cargo build --release --target ${{ matrix.targets[1][0] }}
+        run:   |
+               if [ "$RUNNER_OS" == "Linux" ]; then
+                    export RUSTFLAGS='-C target-feature=+crt-static'
+                    cargo build --release --target ${{ matrix.targets[1][0] }}
+               else
+                    cargo build --release --target ${{ matrix.targets[1][0] }}
+               fi
+        shell: bash
       - name: Artifacts
         uses: actions/upload-artifact@v2
         with:
