@@ -18,10 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::{
-    logging::windows::{log_sink, LogSink},
-    windows::luid_from_alias,
-};
+use crate::ffi_error;
+
+use super::winlog::{log_sink, LogSink};
+use super::luid::luid_from_alias;
 
 use lazy_static::lazy_static;
 use std::{env, io, net::IpAddr, path::Path};
@@ -70,7 +70,7 @@ pub enum Error {
 
 pub struct DnsMonitor {}
 
-impl super::DnsMonitorT for DnsMonitor {
+impl super::super::common::DnsMonitorT for DnsMonitor {
     type Error = Error;
 
     fn new() -> Result<Self, Error> {

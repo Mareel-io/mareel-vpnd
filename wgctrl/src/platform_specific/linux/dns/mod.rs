@@ -22,12 +22,12 @@ mod network_manager;
 mod resolvconf;
 mod static_resolv_conf;
 pub(self) mod systemd_resolved;
+pub(self) mod iface;
 
 use self::{
     network_manager::NetworkManager, resolvconf::Resolvconf, static_resolv_conf::StaticResolvConf,
     systemd_resolved::SystemdResolved,
 };
-use crate::routing::RouteManagerHandle;
 use std::{env, fmt, net::IpAddr};
 
 const RESOLV_CONF_PATH: &str = "/etc/resolv.conf";
@@ -59,17 +59,15 @@ pub enum Error {
 }
 
 pub struct DnsMonitor {
-    route_manager: RouteManagerHandle,
     handle: tokio::runtime::Handle,
     inner: Option<DnsMonitorHolder>,
 }
 
-impl super::DnsMonitorT for DnsMonitor {
+impl super::super::common::DnsMonitorT for DnsMonitor {
     type Error = Error;
 
-    fn new(handle: tokio::runtime::Handle, route_manager: RouteManagerHandle) -> Result<Self> {
+    fn new(handle: tokio::runtime::Handle) -> Result<Self> {
         Ok(DnsMonitor {
-            route_manager,
             handle,
             inner: None,
         })
@@ -80,7 +78,7 @@ impl super::DnsMonitorT for DnsMonitor {
         // Creating a new DNS monitor for each set, in case the system changed how it manages DNS.
         let mut inner = DnsMonitorHolder::new()?;
         if !servers.is_empty() {
-            inner.set(&self.handle, &self.route_manager, interface, servers)?;
+            inner.set(&self.handle, interface, servers)?;
             self.inner = Some(inner);
         }
         Ok(())
@@ -151,7 +149,6 @@ impl DnsMonitorHolder {
     fn set(
         &mut self,
         handle: &tokio::runtime::Handle,
-        route_manager: &RouteManagerHandle,
         interface: &str,
         servers: &[IpAddr],
     ) -> Result<()> {
@@ -162,7 +159,7 @@ impl DnsMonitorHolder {
                 static_resolv_conf.set_dns(servers.to_vec())?
             }
             SystemdResolved(ref mut systemd_resolved) => handle
-                .block_on(systemd_resolved.set_dns(route_manager.clone(), interface, &servers))?,
+                .block_on(systemd_resolved.set_dns(interface, &servers))?,
             NetworkManager(ref mut network_manager) => {
                 network_manager.set_dns(interface, servers)?
             }
@@ -186,6 +183,6 @@ impl DnsMonitorHolder {
 
 /// Returns true if DnsMonitor will use NetworkManager to manage DNS.
 pub fn will_use_nm() -> bool {
-    crate::dns::imp::SystemdResolved::new().is_err()
-        && crate::dns::imp::NetworkManager::new().is_ok()
+    SystemdResolved::new().is_err()
+        && NetworkManager::new().is_ok()
 }

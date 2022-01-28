@@ -18,10 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::{
-    linux::{iface_index, IfaceIndexLookupError},
-    routing::RouteManagerHandle,
-};
+use super::iface::{iface_index, IfaceIndexLookupError};
 use std::net::IpAddr;
 use talpid_dbus::systemd_resolved::{AsyncHandle, SystemdResolved as DbusInterface};
 use talpid_types::ErrorExt;
@@ -58,7 +55,6 @@ impl SystemdResolved {
 
     pub async fn set_dns(
         &mut self,
-        _route_manager: RouteManagerHandle,
         interface_name: &str,
         servers: &[IpAddr],
     ) -> Result<()> {

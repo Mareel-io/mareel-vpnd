@@ -3,4 +3,5 @@ members = [
     "mareel-vpnd",
     "wgctrl",
     "talpid-dbus",
+    "talpid-types",
 ]

@@ -228,7 +228,7 @@ pub struct DnsMonitor {
 /// with anything else.
 unsafe impl Send for DnsMonitor {}
 
-impl super::DnsMonitorT for DnsMonitor {
+impl super::super::common::DnsMonitorT for DnsMonitor {
     type Error = Error;
 
     /// Creates and returns a new `DnsMonitor`. This spawns a background thread that will monitor

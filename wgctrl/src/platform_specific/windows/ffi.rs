@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2022 Empo Inc.
+ * SPDX-FileCopyrightText: 2022 Mullvad VPN AB
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -17,14 +18,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-pub mod interface;
-pub mod route;
 
-pub use interface::*;
-pub use route::*;
+/// Creates a new result type that returns the given result variant on error.
+#[macro_export]
+macro_rules! ffi_error {
+    ($result:ident, $error:expr) => {
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct $result {
+            success: bool,
+        }
 
-pub mod dns;
+        impl $result {
+            pub fn into_result(self) -> Result<(), Error> {
+                match self.success {
+                    true => Ok(()),
+                    false => Err($error),
+                }
+            }
+        }
 
-pub(self) mod winlog;
-pub(self) mod luid;
-pub(self) mod ffi;
+        impl Into<Result<(), Error>> for $result {
+            fn into(self) -> Result<(), Error> {
+                self.into_result()
+            }
+        }
+    };
+}
