@@ -21,9 +21,9 @@ ipnet = "2.3"
 [target.'cfg(target_os = "linux")'.dependencies]
 wireguard-control = "1.5.0"
 ipnetwork = "0.18.0"
-netlink-sys = "0.7.0"
-netlink-packet-route = "0.8.0"
-netlink-packet-core = "0.2.4"
+netlink-sys = "0.8"
+netlink-packet-route = "0.10"
+netlink-packet-core = "0.4"
 libc = "0.2.111"
 
 [target.'cfg(target_os = "macos")'.dependencies]
