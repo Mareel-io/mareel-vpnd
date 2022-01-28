@@ -930,6 +930,7 @@ dependencies = [
  "shell-escape",
  "toml",
  "wgctrl",
+ "windows-service",
 ]
 
 [[package]]
@@ -2358,6 +2359,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "custom_error",
+ "ipnet",
  "ipnetwork",
  "libc",
  "libloading",
@@ -2369,7 +2371,6 @@ dependencies = [
  "rocket",
  "serde",
  "winapi",
- "windows-service",
  "wireguard-control",
  "wireguard-nt",
 ]
