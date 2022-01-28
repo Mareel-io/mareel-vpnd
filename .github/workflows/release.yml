@@ -50,9 +50,10 @@ jobs:
                     export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                elif [ "$RUNNER_OS" == "Windows" ]; then
-                    export RUSTFLAGS='-C target-feature=-crt-static'
+                    export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                else
+                    export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                fi
         shell: bash
