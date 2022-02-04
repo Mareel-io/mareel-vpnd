@@ -192,6 +192,10 @@ impl PlatformInterface for Interface {
         Ok(())
     }
 
+    fn get_platformid(&self) -> Result<String, VpnctrlError> {
+        Ok(self.ifname.to_string())
+    }
+
     fn get_peers(&self) -> Result<Vec<WgPeerCfg>, VpnctrlError> {
         Ok(self.peers.values().cloned().collect())
     }

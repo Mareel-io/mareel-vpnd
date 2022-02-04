@@ -76,6 +76,7 @@ pub trait PlatformInterface {
     fn remove_peer(&mut self, pubkey: &str) -> Result<(), VpnctrlError>;
     fn get_status(&self) -> InterfaceStatus;
     fn get_trafficstats(&self) -> Result<Vec<PeerTrafficStat>, VpnctrlError>;
+    fn get_platformid(&self) -> Result<String, VpnctrlError>;
     fn up(&mut self) -> bool;
     fn down(&mut self) -> bool;
     fn set_ip(&mut self, ips: &[String]) -> Result<(), VpnctrlError>;

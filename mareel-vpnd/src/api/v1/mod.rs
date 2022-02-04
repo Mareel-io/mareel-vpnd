@@ -18,7 +18,7 @@
  */
 
 use std::collections::HashMap;
-use std::sync::{Mutex, RwLock, Arc};
+use std::sync::{Arc, Mutex, RwLock};
 
 use ::prometheus::{Encoder, TextEncoder};
 use dashmap::{DashMap, DashSet};

@@ -20,7 +20,6 @@
 
 use crate::ffi_error;
 
-use super::luid::luid_from_alias;
 use super::winlog::{log_sink, LogSink};
 
 use lazy_static::lazy_static;
@@ -106,7 +105,24 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
         log::trace!("ipv4 ips: {:?} ({})", ipv4, ipv4.len());
         log::trace!("ipv6 ips: {:?} ({})", ipv6, ipv6.len());
 
-        let luid = luid_from_alias(interface).map_err(Error::InterfaceLuidError)?;
+        let luid_u64: u64 = match interface.parse::<u64>() {
+            Ok(x) => x,
+            Err(e) => {
+                return Err(Error::InterfaceLuidError(io::Error::new(
+                    io::ErrorKind::Other,
+                    e.to_string(),
+                )));
+            }
+        };
+        println!("LUID = {}", luid_u64);
+        let mut luid: NET_LUID = unsafe { std::mem::zeroed() };
+        unsafe {
+            std::ptr::copy(
+                luid_u64.to_ne_bytes().as_ptr() as *const NET_LUID,
+                &mut luid,
+                std::mem::size_of::<NET_LUID>(),
+            );
+        };
 
         unsafe {
             WinDns_Set(

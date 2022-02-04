@@ -122,6 +122,10 @@ impl PlatformInterface for Interface {
         Ok(())
     }
 
+    fn get_platformid(&self) -> Result<String, VpnctrlError> {
+        Ok(self.ifname.to_string())
+    }
+
     fn add_peer(&mut self, peer: WgPeerCfg) -> Result<(), VpnctrlError> {
         let pubkey = match Key::from_base64(&peer.pubkey) {
             Ok(x) => x,

@@ -491,10 +491,13 @@ pub(crate) async fn put_dns(
     id: String,
     dns: Json<DnsConfigureReq>,
 ) -> ApiResponseType<String> {
-    match iface_store.iface_states.get(&id) {
-        Some(x) => {
-            drop(x);
-        }
+    let platformid = match iface_store.iface_states.get(&id) {
+        Some(x) => match x.lock().unwrap().interface.get_platformid() {
+            Ok(id) => id,
+            Err(e) => {
+                return (Status::InternalServerError, ApiResponse::err(-1, ":("));
+            }
+        },
         None => {
             return (Status::NotFound, ApiResponse::err(-1, "Not found"));
         }
@@ -513,8 +516,10 @@ pub(crate) async fn put_dns(
     let dnsmon_lock = dns_store.dnsmon.clone();
     match rocket::tokio::task::spawn_blocking(move || {
         let mut dnsmon = dnsmon_lock.lock().unwrap();
-        dnsmon.set(&id, &dns)
-     }).await {
+        dnsmon.set(&platformid, &dns)
+    })
+    .await
+    {
         Ok(_) => (Status::Ok, ApiResponse::ok("ok".to_string())),
         Err(e) => (
             Status::InternalServerError,
@@ -530,10 +535,13 @@ pub(crate) async fn delete_dns(
     dns_store: &State<DnsMonStore>,
     id: String,
 ) -> ApiResponseType<String> {
-    match iface_store.iface_states.get(&id) {
-        Some(x) => {
-            drop(x);
-        }
+    let platformid = match iface_store.iface_states.get(&id) {
+        Some(x) => match x.lock().unwrap().interface.get_platformid() {
+            Ok(id) => id,
+            Err(e) => {
+                return (Status::InternalServerError, ApiResponse::err(-1, ":("));
+            }
+        },
         None => {
             return (Status::NotFound, ApiResponse::err(-1, "Not found"));
         }
@@ -543,7 +551,9 @@ pub(crate) async fn delete_dns(
     match rocket::tokio::task::spawn_blocking(move || {
         let mut dnsmon = dnsmon_lock.lock().unwrap();
         dnsmon.reset()
-     }).await {
+    })
+    .await
+    {
         Ok(_) => (Status::Ok, ApiResponse::ok("ok".to_string())),
         Err(e) => (
             Status::InternalServerError,

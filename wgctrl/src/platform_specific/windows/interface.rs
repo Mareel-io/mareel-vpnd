@@ -183,6 +183,10 @@ impl PlatformInterface for Interface {
         self.apply_peer_update()
     }
 
+    fn get_platformid(&self) -> Result<String, VpnctrlError> {
+        Ok(self.iface.get_luid().to_string())
+    }
+
     fn get_peers(&self) -> Result<Vec<WgPeerCfg>, VpnctrlError> {
         Ok(self
             .peers
