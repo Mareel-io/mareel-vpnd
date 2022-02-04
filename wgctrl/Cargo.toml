@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Empo Inc."]
 license = "GPL-3.0-or-later"
+include = ["./build.rs"]
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
