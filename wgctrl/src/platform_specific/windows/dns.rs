@@ -114,7 +114,6 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
                 )));
             }
         };
-        println!("LUID = {}", luid_u64);
         let mut luid: NET_LUID = unsafe { std::mem::zeroed() };
         unsafe {
             std::ptr::copy(
