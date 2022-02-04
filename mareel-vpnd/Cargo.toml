@@ -15,7 +15,6 @@ path = "src/vpnd-configgen.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default=[]
-nodbus=[]
 
 [dependencies]
 base64 = "0.13"
@@ -36,12 +35,7 @@ curve25519-dalek = "3.2.0"
 argon2 = "0.3.2"
 rand_core = { version = "0.6", features = ["std"] }
 reqwest = { version = "0.11", features = ["json"] }
-
-[target.'cfg(feature = "nodbus")'.dependencies]
-wgctrl = { path = "../wgctrl", features = [] }
-
-[target.'cfg(not(feature = "nodbus"))'.dependencies]
-wgctrl = { path = "../wgctrl", features = ["dbus"] }
+wgctrl = { path = "../wgctrl" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-service = "0.4.0"
