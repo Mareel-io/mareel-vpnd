@@ -119,7 +119,7 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
             std::ptr::copy(
                 luid_u64.to_ne_bytes().as_ptr() as *const NET_LUID,
                 &mut luid,
-                std::mem::size_of::<NET_LUID>(),
+                1,
             );
         };
 
