@@ -68,9 +68,10 @@ pub(crate) async fn create_peer(
 
     if Some(true) == peercfg.autoalloc {
         let v4store = &ip_store.v4;
+        let v6store = &ip_store.v6;
         let mut v4_last_count = ip_store.v4_last_count.write().unwrap();
 
-        let mut ip_suffix: u32 = 0;
+        let mut v4_suffix: u32 = 0;
         for _i in 1..0x1000000 {
             *v4_last_count = match *v4_last_count {
                 0 => 2,
@@ -81,27 +82,58 @@ pub(crate) async fn create_peer(
             // Check existance
             if v4store.get(&*v4_last_count).is_none() {
                 v4store.insert(*v4_last_count);
-                ip_suffix = *v4_last_count;
+                v4_suffix = *v4_last_count;
                 break;
             }
         }
 
-        if ip_suffix == 0 {
+        if v4_suffix == 0 {
             return (
                 Status::NotAcceptable,
                 ApiResponse::err(-1, "Resource not available"),
             );
         }
 
+        let mut v6_last_count = ip_store.v6_last_count.write().unwrap();
+        let mut v6_suffix: u64 = 0;
+        for _i in 1..0x100000000 {
+            *v6_last_count = match *v6_last_count {
+                0 => 2,
+                0xFFFFFFFF.. => 2,
+                _ => *v6_last_count + 1,
+            };
+
+            // Check existance
+            if v6store.get(&*v6_last_count).is_none() {
+                v6store.insert(*v6_last_count);
+                v6_suffix = *v6_last_count;
+                break;
+            }
+        }
+
+        if v6_suffix == 0 {
+            return (
+                Status::NotAcceptable,
+                ApiResponse::err(-1, "Resource not available"),
+            );
+        }
+
+
         peercfg.allowed_ips = Vec::new();
         peercfg.allowed_ips.push(format!(
             "10.{}.{}.{}/32",
-            ip_suffix & 0xFF0000,
-            ip_suffix & 0xFF00,
-            ip_suffix & 0xFF
+            v4_suffix & 0xFF0000,
+            v4_suffix & 0xFF00,
+            v4_suffix & 0xFF
+        ));
+        peercfg.allowed_ips.push(format!(
+            "fd92:6943:1c6e:96bc::{:x}:{:x}/128",
+            v6_suffix & 0xFFFF0000,
+            v6_suffix & 0xFFFF,
         ));
 
-        peercfg.autoalloc_v4 = Some(ip_suffix);
+        peercfg.autoalloc_v4 = Some(v4_suffix);
+        peercfg.autoalloc_v6 = Some(v6_suffix);
     }
 
     if let Some(endpt) = &peercfg.endpoint {
