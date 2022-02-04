@@ -96,7 +96,7 @@ pub(crate) async fn create_peer(
 
         let mut v6_last_count = ip_store.v6_last_count.write().unwrap();
         let mut v6_suffix: u64 = 0;
-        for _i in 1..0x100000000 {
+        for _i in 1u64..0x100000000u64 {
             *v6_last_count = match *v6_last_count {
                 0 => 2,
                 0xFFFFFFFF.. => 2,
