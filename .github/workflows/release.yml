@@ -43,6 +43,13 @@ jobs:
         shell: bash
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          lfs: true
+      - uses: Swatinem/rust-cache@v1
+      - name: Unzip
+        run:   |
+               unzip windll.zip
+        shell: bash
       - uses: Swatinem/rust-cache@v1
       - name: Build
         run:   |
