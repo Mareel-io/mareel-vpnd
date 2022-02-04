@@ -19,15 +19,19 @@
  */
 
 pub(self) mod iface;
+
+#[cfg(feature = "dbus")]
 mod network_manager;
 mod resolvconf;
 mod static_resolv_conf;
+#[cfg(feature = "dbus")]
 pub(self) mod systemd_resolved;
 
-use self::{
-    network_manager::NetworkManager, resolvconf::Resolvconf, static_resolv_conf::StaticResolvConf,
-    systemd_resolved::SystemdResolved,
-};
+#[cfg(feature = "dbus")]
+use self::{network_manager::NetworkManager, systemd_resolved::SystemdResolved};
+
+use self::{resolvconf::Resolvconf, static_resolv_conf::StaticResolvConf};
+
 use std::{env, fmt, net::IpAddr};
 
 const RESOLV_CONF_PATH: &str = "/etc/resolv.conf";
@@ -38,10 +42,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(err_derive::Error, Debug)]
 pub enum Error {
     /// Error in systemd-resolved DNS monitor
+    #[cfg(feature = "dbus")]
     #[error(display = "Error in systemd-resolved DNS monitor")]
     SystemdResolved(#[error(source)] systemd_resolved::Error),
 
     /// Error in NetworkManager DNS monitor
+    #[cfg(feature = "dbus")]
     #[error(display = "Error in NetworkManager DNS monitor")]
     NetworkManager(#[error(source)] network_manager::Error),
 
@@ -93,7 +99,9 @@ impl super::super::common::DnsMonitorT for DnsMonitor {
 }
 
 pub enum DnsMonitorHolder {
+    #[cfg(feature = "dbus")]
     SystemdResolved(SystemdResolved),
+    #[cfg(feature = "dbus")]
     NetworkManager(NetworkManager),
     Resolvconf(Resolvconf),
     StaticResolvConf(StaticResolvConf),
@@ -105,7 +113,9 @@ impl fmt::Display for DnsMonitorHolder {
         let name = match self {
             Resolvconf(..) => "resolvconf",
             StaticResolvConf(..) => "/etc/resolv.conf",
+            #[cfg(feature = "dbus")]
             SystemdResolved(..) => "systemd-resolved",
+            #[cfg(feature = "dbus")]
             NetworkManager(..) => "network manager",
         };
         f.write_str(name)
@@ -119,7 +129,9 @@ impl DnsMonitorHolder {
         let manager = match dns_module.as_ref().and_then(|value| value.to_str()) {
             Some("static-file") => DnsMonitorHolder::StaticResolvConf(StaticResolvConf::new()?),
             Some("resolvconf") => DnsMonitorHolder::Resolvconf(Resolvconf::new()?),
+            #[cfg(feature = "dbus")]
             Some("systemd") => DnsMonitorHolder::SystemdResolved(SystemdResolved::new()?),
+            #[cfg(feature = "dbus")]
             Some("network-manager") => DnsMonitorHolder::NetworkManager(NetworkManager::new()?),
             Some(_) | None => Self::with_detected_dns_manager()?,
         };
@@ -128,6 +140,13 @@ impl DnsMonitorHolder {
     }
 
     fn with_detected_dns_manager() -> Result<Self> {
+        #[cfg(not(feature = "dbus"))]
+        return Resolvconf::new()
+            .map(DnsMonitorHolder::Resolvconf)
+            .or_else(|_| StaticResolvConf::new().map(DnsMonitorHolder::StaticResolvConf))
+            .map_err(|_| Error::NoDnsMonitor);
+
+        #[cfg(feature = "dbus")]
         SystemdResolved::new()
             .map(DnsMonitorHolder::SystemdResolved)
             .or_else(|err| {
@@ -158,9 +177,11 @@ impl DnsMonitorHolder {
             StaticResolvConf(ref mut static_resolv_conf) => {
                 static_resolv_conf.set_dns(servers.to_vec())?
             }
+            #[cfg(feature = "dbus")]
             SystemdResolved(ref mut systemd_resolved) => {
                 handle.block_on(systemd_resolved.set_dns(interface, &servers))?
             }
+            #[cfg(feature = "dbus")]
             NetworkManager(ref mut network_manager) => {
                 network_manager.set_dns(interface, servers)?
             }
@@ -173,9 +194,11 @@ impl DnsMonitorHolder {
         match self {
             Resolvconf(ref mut resolvconf) => resolvconf.reset()?,
             StaticResolvConf(ref mut static_resolv_conf) => static_resolv_conf.reset()?,
+            #[cfg(feature = "dbus")]
             SystemdResolved(ref mut systemd_resolved) => {
                 handle.block_on(systemd_resolved.reset())?
             }
+            #[cfg(feature = "dbus")]
             NetworkManager(ref mut network_manager) => network_manager.reset()?,
         }
         Ok(())
@@ -183,6 +206,12 @@ impl DnsMonitorHolder {
 }
 
 /// Returns true if DnsMonitor will use NetworkManager to manage DNS.
+#[cfg(feature = "dbus")]
 pub fn will_use_nm() -> bool {
     SystemdResolved::new().is_err() && NetworkManager::new().is_ok()
+}
+
+#[cfg(not(feature = "dbus"))]
+pub fn will_use_nm() -> bool {
+    false
 }

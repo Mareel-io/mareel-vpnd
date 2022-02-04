@@ -118,7 +118,6 @@ pub(crate) async fn create_peer(
             );
         }
 
-
         peercfg.allowed_ips = Vec::new();
         peercfg.allowed_ips.push(format!(
             "10.{}.{}.{}/32",

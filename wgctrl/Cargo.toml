@@ -10,6 +10,7 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default=[]
+dbus=["talpid-dbus"]
 
 [dependencies]
 base64 = "0.13"
@@ -33,7 +34,7 @@ netlink-sys = "0.8"
 netlink-packet-route = "0.10"
 netlink-packet-core = "0.4"
 libc = "0.2.111"
-talpid-dbus = { path = "../talpid-dbus" }
+talpid-dbus = { path = "../talpid-dbus", optional = true }
 
 # came from mullvad
 notify = "4.0"
