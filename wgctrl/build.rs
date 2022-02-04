@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Empo Inc.
+//
+// SPDX-License-Identifier: CC0-1.0
+
 use std::{env, path::PathBuf};
 
 fn manifest_dir() -> PathBuf {
