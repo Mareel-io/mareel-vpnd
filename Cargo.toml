@@ -4,4 +4,6 @@ members = [
     "wgctrl",
     "talpid-dbus",
     "talpid-types",
+    "wireguard-control",
+    "netlink-request"
 ]
