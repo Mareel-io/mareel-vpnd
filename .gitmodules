@@ -1,0 +1,3 @@
+[submodule "innernet"]
+	path = innernet
+	url = https://github.com/tonarino/innernet.git
