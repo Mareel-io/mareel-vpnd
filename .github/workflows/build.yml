@@ -53,8 +53,11 @@ jobs:
         shell: bash
       - name:  Prepare the build
         run:   |
-               cp -av ./innernet/wireguard-control ./
-               cp -av ./innernet/netlink-request ./
+               if [ "$RUNNER_OS" == "Windows" ]; then
+                    cp -f ./Cargo.toml.windows ./Cargo.toml
+               else
+                    echo "This platform does not require specific configuration."
+               fi
         shell: bash
       - name: Build
         run:   |
