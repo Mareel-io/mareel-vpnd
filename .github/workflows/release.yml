@@ -51,23 +51,16 @@ jobs:
         run:   |
                unzip windll.zip
         shell: bash
-      - name:  Prepare the build
-        run:   |
-               if [ "$RUNNER_OS" == "Windows" ]; then
-                    rm -f ./Cargo.toml
-                    rm -f ./netlink-request
-                    rm -f ./wireguard-control
-                    mv ./Cargo.toml.windows ./Cargo.toml
-               else
-                    echo "This platform does not require specific configuration."
-               fi
-        shell: bash
       - name: Build
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
                     export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
+                    rm -f ./Cargo.toml
+                    rm -f ./netlink-request
+                    rm -f ./wireguard-control
+                    mv ./Cargo.toml.windows ./Cargo.toml
                     export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                else
