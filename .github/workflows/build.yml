@@ -55,6 +55,7 @@ jobs:
         run:   |
                cp -av ./innernet/wireguard-control ./
                cp -av ./innernet/netlink-request ./
+        shell: bash
       - name: Build
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
