@@ -51,6 +51,10 @@ jobs:
         run:   |
                unzip windll.zip
         shell: bash
+      - name:  Prepare the build
+        run:   |
+               cp -av ./innernet/wireguard-control ./
+               cp -av ./innernet/netlink-request ./
       - name: Build
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then

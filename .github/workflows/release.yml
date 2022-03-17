@@ -53,8 +53,8 @@ jobs:
         shell: bash
       - name:  Prepare the build
         run:   |
-               cp -arv ./innernet/wireguard-control ./
-               cp -arv ./innernet/netlink-request ./
+               cp -av ./innernet/wireguard-control ./
+               cp -av ./innernet/netlink-request ./
         shell: bash
       - name: Build
         run:   |
