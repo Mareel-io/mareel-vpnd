@@ -57,7 +57,7 @@ jobs:
                     rm -f ./Cargo.toml
                     rm -f ./netlink-request
                     rm -f ./wireguard-control
-                    cp -f ./Cargo.toml.windows ./Cargo.toml
+                    mv ./Cargo.toml.windows ./Cargo.toml
                else
                     echo "This platform does not require specific configuration."
                fi
