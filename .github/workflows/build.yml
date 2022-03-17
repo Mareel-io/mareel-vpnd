@@ -54,6 +54,9 @@ jobs:
       - name:  Prepare the build
         run:   |
                if [ "$RUNNER_OS" == "Windows" ]; then
+                    rm -f ./Cargo.toml
+                    rm -f ./netlink-request
+                    rm -f ./wireguard-control
                     cp -f ./Cargo.toml.windows ./Cargo.toml
                else
                     echo "This platform does not require specific configuration."
