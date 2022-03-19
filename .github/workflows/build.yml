@@ -62,7 +62,7 @@ jobs:
                     cp -rv ./innernet/netlink-request ./
                     cp -rv ./innernet/wireguard-control ./
                     export RUSTFLAGS='-C target-feature=+crt-static'
-                    cargo build --release --target ${{ matrix.targets[1][0] }}
+                    cargo build --release --target ${{ matrix.targets[1][0] }} --bin mareel-vpnd --bin vpnd-configgen
                else
                     export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
