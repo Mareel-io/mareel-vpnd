@@ -29,7 +29,6 @@ libc = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 wireguard-control = { path = "../wireguard-control" }
-#wireguard-control = "1.5.0"
 ipnetwork = "0.18.0"
 netlink-sys = "0.8"
 netlink-packet-route = "0.10"
@@ -43,10 +42,12 @@ resolv-conf = "0.7"
 duct = "0.13"
 which = { version = "4.0", default-features = false }
 
+#wireguard-control = "1.5.0"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 wireguard-control = { path = "../wireguard-control" }
-#wireguard-control = "1.5.0"
 system-configuration = "0.5"
+#wireguard-control = "1.5.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 wireguard-nt = "0.3"

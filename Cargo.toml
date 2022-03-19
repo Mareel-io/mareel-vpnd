@@ -3,7 +3,5 @@ members = [
     "mareel-vpnd",
     "wgctrl",
     "talpid-dbus",
-    "talpid-types",
-    "wireguard-control",
-    "netlink-request"
+    "talpid-types"
 ]

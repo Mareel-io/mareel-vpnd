@@ -57,10 +57,10 @@ jobs:
                     export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
-                    rm -f ./Cargo.toml
                     rm -f ./netlink-request
                     rm -f ./wireguard-control
-                    mv ./Cargo.toml.windows ./Cargo.toml
+                    cp -rv ./innernet/netlink-request ./
+                    cp -rv ./innernet/wireguard-control ./
                     export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
                else

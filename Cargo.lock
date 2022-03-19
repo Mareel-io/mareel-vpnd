@@ -1358,7 +1358,7 @@ dependencies = [
 
 [[package]]
 name = "netlink-request"
-version = "1.5.4-beta.4"
+version = "1.5.4"
 dependencies = [
  "netlink-packet-core",
  "netlink-packet-generic",
@@ -2925,7 +2925,7 @@ dependencies = [
 
 [[package]]
 name = "wireguard-control"
-version = "1.5.4-beta.4"
+version = "1.5.4"
 dependencies = [
  "base64",
  "curve25519-dalek 4.0.0-pre.2",
