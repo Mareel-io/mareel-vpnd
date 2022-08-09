@@ -121,13 +121,13 @@ pub(crate) async fn create_peer(
         peercfg.allowed_ips = Vec::new();
         peercfg.allowed_ips.push(format!(
             "10.{}.{}.{}/32",
-            v4_suffix & 0xFF0000,
-            v4_suffix & 0xFF00,
+            (v4_suffix & 0xFF0000) >> 16,
+            (v4_suffix & 0xFF00) >> 8,
             v4_suffix & 0xFF
         ));
         peercfg.allowed_ips.push(format!(
             "fd92:6943:1c6e:96bc::{:x}:{:x}/128",
-            v6_suffix & 0xFFFF0000,
+            (v6_suffix & 0xFFFF0000) >> 16,
             v6_suffix & 0xFFFF,
         ));
 
