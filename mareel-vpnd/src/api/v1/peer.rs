@@ -33,6 +33,33 @@ use wgctrl::platform_specific::common::{PlatformRoute, WgPeerCfg};
 use super::types::PeerConfig;
 use crate::api::tokenauth::ApiKey;
 
+fn format_ipv4(v4_suffix: u32) -> String {
+    format!(
+        "10.{}.{}.{}/32",
+        (v4_suffix & 0xFF0000) >> 16,
+        (v4_suffix & 0xFF00) >> 8,
+        v4_suffix & 0xFF
+    )
+}
+
+#[test]
+fn test_format_ipv4() {
+    assert_eq!(format_ipv4(0x1FF), "10.0.1.255/32");
+}
+
+fn format_ipv6(v6_suffix: u64) -> String {
+    format!(
+        "fd92:6943:1c6e:96bc::{:x}:{:x}/128",
+        (v6_suffix & 0xFFFF0000) >> 16,
+        v6_suffix & 0xFFFF,
+    )
+}
+
+#[test]
+fn test_format_ipv6() {
+    assert_eq!(format_ipv6(0x1FFFF), "fd92:6943:1c6e:96bc::1:ffff/128");
+}
+
 #[post("/interface/<if_id>/peer", format = "json", data = "<peercfg>")]
 pub(crate) async fn create_peer(
     _apikey: ApiKey,
@@ -119,17 +146,8 @@ pub(crate) async fn create_peer(
         }
 
         peercfg.allowed_ips = Vec::new();
-        peercfg.allowed_ips.push(format!(
-            "10.{}.{}.{}/32",
-            (v4_suffix & 0xFF0000) >> 16,
-            (v4_suffix & 0xFF00) >> 8,
-            v4_suffix & 0xFF
-        ));
-        peercfg.allowed_ips.push(format!(
-            "fd92:6943:1c6e:96bc::{:x}:{:x}/128",
-            (v6_suffix & 0xFFFF0000) >> 16,
-            v6_suffix & 0xFFFF,
-        ));
+        peercfg.allowed_ips.push(format_ipv4(v4_suffix));
+        peercfg.allowed_ips.push(format_ipv6(v6_suffix));
 
         peercfg.autoalloc_v4 = Some(v4_suffix);
         peercfg.autoalloc_v6 = Some(v6_suffix);
