@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         targets:
-          - [ubuntu-latest, [x86_64-unknown-linux-gnu]]
+          - [ubuntu-latest, [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]]
           - [windows-latest, [x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]]
           - [macos-latest, [x86_64-apple-darwin, aarch64-apple-darwin]]
         clang: [["13.0", "clang_13_0"]]
