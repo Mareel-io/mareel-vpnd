@@ -55,17 +55,17 @@ jobs:
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
                     export RUSTFLAGS='-C target-feature=-crt-static'
-                    cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
+                    cargo build --release --target ${{ matrix.targets[1][1] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
                     rm -f ./netlink-request
                     rm -f ./wireguard-control
                     cp -rv ./innernet/netlink-request ./
                     cp -rv ./innernet/wireguard-control ./
                     export RUSTFLAGS='-C target-feature=+crt-static'
-                    cargo build --release --target ${{ matrix.targets[1][0] }} --bin mareel-vpnd --bin vpnd-configgen
+                    cargo build --release --target ${{ matrix.targets[1][1] }} --bin mareel-vpnd --bin vpnd-configgen
                else
                     export RUSTFLAGS='-C target-feature=+crt-static'
-                    cargo build --release --target ${{ matrix.targets[1][0] }}
+                    cargo build --release --target ${{ matrix.targets[1][1] }}
                fi
         shell: bash
       - name: Artifacts
