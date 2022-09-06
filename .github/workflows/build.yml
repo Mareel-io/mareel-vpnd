@@ -44,9 +44,8 @@ jobs:
                     sudo rm -rf /var/lib/apt/lists/*
                     sudo apt update
                     sudo apt --fix-broken install -y
-                    sudo apt --fix-broken upgrade -y
-                    sudo apt --fix-broken install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev libdbus-glib-1-dev libssl-dev
-                    sudo apt --fix-broken install -y libdbus-1-3:arm64 libdbus-1-dev:arm64 libsystemd-dev:arm64 libdbus-glib-1-dev:arm64 libssl-dev:arm64
+                    sudo apt --fix-broken install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev libssl-dev
+                    sudo apt --fix-broken install -y libdbus-1-3:arm64 libdbus-1-dev:arm64 libsystemd-dev:arm64 libssl-dev:arm64
                     sudo apt --fix-broken install -y gcc-aarch64-linux-gnu libgcc-10-dev:arm64
                else
                     echo "This platform does not require libdbus."
