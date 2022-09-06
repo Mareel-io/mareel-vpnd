@@ -44,6 +44,8 @@ jobs:
                if [ "$RUNNER_OS" == "Linux" ]; then
                     sudo ./ci/ubuntu-multiarch.sh
                     sudo dpkg --add-architecture arm64
+                    # Bust cache
+                    sudo rm -rf /var/lib/apt/lists/*
                     sudo apt update
                     sudo apt install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev libdbus-glib-1-dev libssl-dev
                     sudo apt install -y libdbus-1-3:arm64 libdbus-1-dev:arm64 libsystemd-dev:arm64 libdbus-glib-1-dev:arm64 libssl-dev:arm64
