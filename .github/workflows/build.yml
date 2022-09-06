@@ -77,7 +77,8 @@ jobs:
                     cp -rv ./innernet/wireguard-control ./
                     export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }} --bin mareel-vpnd --bin vpnd-configgen
-                    cargo build --release --target ${{ matrix.targets[1][1] }} --bin mareel-vpnd --bin vpnd-configgen
+                    # Ths requires arm64 edition of windns
+                    #cargo build --release --target ${{ matrix.targets[1][1] }} --bin mareel-vpnd --bin vpnd-configgen
                else
                     export RUSTFLAGS='-C target-feature=+crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }}
