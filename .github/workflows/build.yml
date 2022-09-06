@@ -33,10 +33,25 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - name:  Install libdbus-1
+          target: ${{ matrix.targets[1][1] }}
+      - name:  Install libraries
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
-                    sudo apt install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev libdbus-glib-1-dev
+                    source /etc/lsb-release
+                    export CODENAME=$DISTRIB_CODENAME
+                    cat <<EOF > multiarch.list
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME main restricted
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME-updates main restricted
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME universe
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME-updates universe
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME multiverse
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME-updates multiverse
+deb [arch=armhf,arm64] http://ports.ubuntu.com/ $CODENAME-backports main restricted universe multiverse
+EOF
+                    sudo dpkg --add-architecture arm64
+                    sudo apt install -y pkg-config libdbus-1-3 libdbus-1-dev libsystemd-dev libdbus-glib-1-dev libssl-dev
+                    sudo apt install -y libdbus-1-3:arm64 libdbus-1-dev:arm64 libsystemd-dev:arm64 libdbus-glib-1-dev:arm64 libssl-dev:arm64
+                    sudo apt install -y gcc-aarch64-linux-gnu libgcc-10-dev:arm64
                else
                     echo "This platform does not require libdbus."
                fi
@@ -55,6 +70,8 @@ jobs:
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
                     export RUSTFLAGS='-C target-feature=-crt-static'
+                    cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
+                    export PKG_CONFIG=/usr/bin/aarch64-linux-gnu-pkg-config
                     cargo build --release --target ${{ matrix.targets[1][1] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
                     rm -f ./netlink-request
@@ -62,9 +79,11 @@ jobs:
                     cp -rv ./innernet/netlink-request ./
                     cp -rv ./innernet/wireguard-control ./
                     export RUSTFLAGS='-C target-feature=+crt-static'
+                    cargo build --release --target ${{ matrix.targets[1][0] }} --bin mareel-vpnd --bin vpnd-configgen
                     cargo build --release --target ${{ matrix.targets[1][1] }} --bin mareel-vpnd --bin vpnd-configgen
                else
                     export RUSTFLAGS='-C target-feature=+crt-static'
+                    cargo build --release --target ${{ matrix.targets[1][0] }}
                     cargo build --release --target ${{ matrix.targets[1][1] }}
                fi
         shell: bash
