@@ -22,11 +22,6 @@ jobs:
     env:
       RUSTFLAGS: "-C target-feature=-crt-static"
     steps:
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
-        with:
-          version: ${{ matrix.clang[0] }}
-          directory: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -54,6 +49,11 @@ jobs:
                     echo "This platform does not require libdbus."
                fi
         shell: bash
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: ${{ matrix.clang[0] }}
+          directory: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}
       - uses: Swatinem/rust-cache@v1
       - name: Unzip
         run:   |
