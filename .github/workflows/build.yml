@@ -67,7 +67,7 @@ jobs:
                     export CROSS_GCCLIB=$(ls -d /usr/lib/gcc-cross/aarch64-linux-gnu/* | sort | head -n 1)
                     export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
-                    export RUSTFLAGS="-C target-feature=-crt-static -C link-arg=-L -C link-arg=/usr/lib/aarch64-linux-gnu -C link-arg=-L link-arg=$CROSS_GCCLIB"
+                    export RUSTFLAGS="-C target-feature=-crt-static -C link-arg=-L -C link-arg=/usr/lib/aarch64-linux-gnu -C link-arg=-L -C link-arg=$CROSS_GCCLIB"
                     export PKG_CONFIG=/usr/bin/aarch64-linux-gnu-pkg-config
                     cargo build --release --target ${{ matrix.targets[1][1] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
