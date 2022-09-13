@@ -64,13 +64,15 @@ jobs:
       - name: Build
         run:   |
                if [ "$RUNNER_OS" == "Linux" ]; then
-                    export CROSS_GCCLIB=$(ls -d /usr/lib/gcc-cross/aarch64-linux-gnu/* | sort | head -n 1)
                     export RUSTFLAGS='-C target-feature=-crt-static'
-                    cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
                     export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
                     export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
                     export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+
+                    cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
+
                     export BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu="--sysroot=/usr/aarch64-linux-gnu"
+                    export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu
                     export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig/:${PKG_CONFIG_PATH}"
                     cargo build --release --target ${{ matrix.targets[1][1] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
