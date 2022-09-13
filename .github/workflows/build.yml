@@ -67,8 +67,12 @@ jobs:
                     export CROSS_GCCLIB=$(ls -d /usr/lib/gcc-cross/aarch64-linux-gnu/* | sort | head -n 1)
                     export RUSTFLAGS='-C target-feature=-crt-static'
                     cargo build --release --target ${{ matrix.targets[1][0] }} --features dbus
-                    export RUSTFLAGS="-C target-cpu=neoverse-n1 -C link-arg=-L -C link-arg=/usr/lib/aarch64-linux-gnu -C link-arg=-L -C link-arg=$CROSS_GCCLIB"
-                    export PKG_CONFIG=/usr/bin/aarch64-linux-gnu-pkg-config
+                    export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+                    export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+                    export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+                    export BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu="--sysroot=/usr/aarch64-linux-gnu"
+                    export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig/:${PKG_CONFIG_PATH}"
+                    export RUSTFLAGS="-C target-cpu=neoverse-n1 -C target-featuer=-crt-static"
                     cargo build --release --target ${{ matrix.targets[1][1] }} --features dbus
                elif [ "$RUNNER_OS" == "Windows" ]; then
                     rm -f ./netlink-request
