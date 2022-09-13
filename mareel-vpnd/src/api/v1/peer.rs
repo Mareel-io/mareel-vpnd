@@ -201,7 +201,7 @@ pub(crate) async fn create_peer(
 
     iface_state.peer_cfgs.insert(
         peercfg.pubkey.clone(),
-        (peercfg.clone().into_inner(), tx_counter, rx_counter),
+        (peercfg.clone(), tx_counter, rx_counter),
     );
 
     (Status::Ok, ApiResponse::ok(peercfg.into_inner()))
