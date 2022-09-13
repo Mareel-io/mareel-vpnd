@@ -96,7 +96,8 @@ pub(crate) async fn launch(
         .ignite()
         .await?
         .launch()
-        .await
+        .await?;
+    Ok(())
 }
 
 fn launcher(shdn: Option<Receiver<()>>) -> Result<(), ()> {
